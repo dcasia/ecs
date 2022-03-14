@@ -53,7 +53,7 @@ return static function (ContainerConfigurator $configurator): void {
         SingleLineThrowFixer::class => false,
         StaticLambdaFixer::class => false,
         UseArrowFunctionsFixer::class => false,
-        VoidReturnFixer::class => true,
+        VoidReturnFixer::class => false,
     ];
 
     register_fixers($configurator, $options);
