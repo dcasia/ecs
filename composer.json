@@ -1,0 +1,21 @@
+{
+    "name": "digital-creative/ecs",
+    "description": "Standard code style configuration",
+    "require": {
+        "php": ">=7.4.0",
+        "symplify/easy-coding-standard": "^10.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "DigitalCreative\\ECS\\": "src/"
+        },
+        "files": [
+            "helpers/functions.php"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
