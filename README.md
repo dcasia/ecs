@@ -19,6 +19,9 @@ return static function (ContainerConfigurator $configurator): void {
     $parameters->set(Option::PARALLEL, true);
     $parameters->set(Option::PATHS, [
         __DIR__ . '/app',
+        __DIR__ . '/database',
+        __DIR__ . '/config',
+        __DIR__ . '/routes',
         __DIR__ . '/tests',
     ]);
 
