@@ -1,6 +1,18 @@
 # Installation
 
-- Install it via `composer require digital-creative/ecs`
+
+- Add this repository to composer.json
+
+```json
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/dcasia/ecs.git"
+    }
+]
+```
+
+- Then install it via `composer require digital-creative/ecs`
 
 - Create a file named `ecs.php` in the root directory of your project with the following content:
 
@@ -49,4 +61,4 @@ return static function (ContainerConfigurator $configurator): void {
 };
 ```
 
-- Run the 
+- Run the `./vendor/bin/ecs check --fix`
