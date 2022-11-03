@@ -13,9 +13,9 @@ use PhpCsFixer\Fixer\StringNotation\SimpleToComplexStringVariableFixer;
 use PhpCsFixer\Fixer\StringNotation\SingleQuoteFixer;
 use PhpCsFixer\Fixer\StringNotation\StringLengthToEmptyFixer;
 use PhpCsFixer\Fixer\StringNotation\StringLineEndingFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         EscapeImplicitBackslashesFixer::class => false,
@@ -29,6 +29,6 @@ return static function (ContainerConfigurator $configurator): void {
         StringLineEndingFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

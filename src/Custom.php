@@ -5,9 +5,9 @@ declare (strict_types = 1);
 namespace DigitalCreative\ECS;
 
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
 //        BracesFixer::class => true,
@@ -15,6 +15,6 @@ return static function (ContainerConfigurator $configurator): void {
 //        PaddedBlockFixer::class => true
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

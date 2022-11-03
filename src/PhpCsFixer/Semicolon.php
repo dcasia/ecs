@@ -9,9 +9,9 @@ use PhpCsFixer\Fixer\Semicolon\NoEmptyStatementFixer;
 use PhpCsFixer\Fixer\Semicolon\NoSinglelineWhitespaceBeforeSemicolonsFixer;
 use PhpCsFixer\Fixer\Semicolon\SemicolonAfterInstructionFixer;
 use PhpCsFixer\Fixer\Semicolon\SpaceAfterSemicolonFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         MultilineWhitespaceBeforeSemicolonsFixer::class => true,
@@ -21,6 +21,6 @@ return static function (ContainerConfigurator $configurator): void {
         SpaceAfterSemicolonFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

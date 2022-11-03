@@ -5,14 +5,14 @@ declare (strict_types = 1);
 namespace DigitalCreative\ECS\PhpCsFixer;
 
 use PhpCsFixer\Fixer\ConstantNotation\NativeConstantInvocationFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         NativeConstantInvocationFixer::class => false,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

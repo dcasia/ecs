@@ -18,9 +18,9 @@ use PhpCsFixer\Fixer\Whitespace\NoTrailingWhitespaceFixer;
 use PhpCsFixer\Fixer\Whitespace\NoWhitespaceInBlankLineFixer;
 use PhpCsFixer\Fixer\Whitespace\SingleBlankLineAtEofFixer;
 use PhpCsFixer\Fixer\Whitespace\TypesSpacesFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         ArrayIndentationFixer::class => true,
@@ -39,6 +39,6 @@ return static function (ContainerConfigurator $configurator): void {
         TypesSpacesFixer::class => [ 'space' => 'none' ],
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

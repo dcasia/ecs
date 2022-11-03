@@ -7,9 +7,9 @@ namespace DigitalCreative\ECS\PhpCsFixer;
 use PhpCsFixer\Fixer\Strict\DeclareStrictTypesFixer;
 use PhpCsFixer\Fixer\Strict\StrictComparisonFixer;
 use PhpCsFixer\Fixer\Strict\StrictParamFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         DeclareStrictTypesFixer::class => true,
@@ -17,6 +17,6 @@ return static function (ContainerConfigurator $configurator): void {
         StrictParamFixer::class => false,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

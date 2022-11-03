@@ -10,9 +10,9 @@ use PhpCsFixer\Fixer\CastNotation\ModernizeTypesCastingFixer;
 use PhpCsFixer\Fixer\CastNotation\NoShortBoolCastFixer;
 use PhpCsFixer\Fixer\CastNotation\NoUnsetCastFixer;
 use PhpCsFixer\Fixer\CastNotation\ShortScalarCastFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         CastSpacesFixer::class => true,
@@ -23,6 +23,6 @@ return static function (ContainerConfigurator $configurator): void {
         ShortScalarCastFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

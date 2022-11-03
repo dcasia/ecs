@@ -16,9 +16,9 @@ use PhpCsFixer\Fixer\LanguageConstruct\GetClassToClassKeywordFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\IsNullFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\NoUnsetOnPropertyFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\SingleSpaceAfterConstructFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     /**
      * @deprecated ClassKeywordRemoveFixer::class
@@ -38,6 +38,6 @@ return static function (ContainerConfigurator $configurator): void {
         SingleSpaceAfterConstructFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

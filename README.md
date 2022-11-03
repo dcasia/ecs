@@ -22,14 +22,12 @@
 declare(strict_types = 1);
 
 use DigitalCreative\ECS\ValueObject\SetList;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symplify\EasyCodingStandard\ValueObject\Option;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
-    $parameters = $configurator->parameters();
-    $parameters->set(Option::PARALLEL, true);
-    $parameters->set(Option::PATHS, [
+    $config->parallel();
+    $config->paths([
         __DIR__ . '/app',
         __DIR__ . '/database',
         __DIR__ . '/config',
@@ -37,14 +35,16 @@ return static function (ContainerConfigurator $configurator): void {
         __DIR__ . '/tests',
     ]);
 
-    $configurator->import(SetList::PHP_CS_FIXER);
-    $configurator->import(SetList::CUSTOM);
+    $config->import(SetList::PHP_CS_FIXER);
+    $config->import(SetList::CUSTOM);
 
     /**
      * Ignore specific fixers imported via above set lists
      */
-    $parameters->set(Option::SKIP, [
+    $config->skip([
         // IgnoreFixer::class
+        NoBlankLinesAfterClassOpeningFixer::class,
+        ClassDefinitionFixer::class,
     ]);
 
     /**
@@ -56,7 +56,7 @@ return static function (ContainerConfigurator $configurator): void {
         // IgnoreFixer::class => false,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };
 ```

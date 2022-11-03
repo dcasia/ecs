@@ -10,9 +10,9 @@ use PhpCsFixer\Fixer\Comment\MultilineCommentOpeningClosingFixer;
 use PhpCsFixer\Fixer\Comment\NoEmptyCommentFixer;
 use PhpCsFixer\Fixer\Comment\NoTrailingWhitespaceInCommentFixer;
 use PhpCsFixer\Fixer\Comment\SingleLineCommentStyleFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         CommentToPhpdocFixer::class => true,
@@ -23,6 +23,6 @@ return static function (ContainerConfigurator $configurator): void {
         SingleLineCommentStyleFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

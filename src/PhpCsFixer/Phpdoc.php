@@ -38,9 +38,9 @@ use PhpCsFixer\Fixer\Phpdoc\PhpdocTypesFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocTypesOrderFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocVarAnnotationCorrectOrderFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocVarWithoutNameFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         AlignMultilineCommentFixer::class => [ 'comment_type' => 'all_multiline' ],
@@ -78,6 +78,6 @@ return static function (ContainerConfigurator $configurator): void {
         PhpdocVarWithoutNameFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

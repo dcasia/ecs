@@ -9,9 +9,9 @@ use PhpCsFixer\Fixer\NamespaceNotation\CleanNamespaceFixer;
 use PhpCsFixer\Fixer\NamespaceNotation\NoBlankLinesBeforeNamespaceFixer;
 use PhpCsFixer\Fixer\NamespaceNotation\NoLeadingNamespaceWhitespaceFixer;
 use PhpCsFixer\Fixer\NamespaceNotation\SingleBlankLineBeforeNamespaceFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         BlankLineAfterNamespaceFixer::class => true,
@@ -21,6 +21,6 @@ return static function (ContainerConfigurator $configurator): void {
         SingleBlankLineBeforeNamespaceFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

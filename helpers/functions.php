@@ -1,21 +1,23 @@
 <?php
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-function register_fixers(ContainerConfigurator $configurator, array $options): void
+function register_fixers(ECSConfig $config, array $options): void
 {
-    $services = $configurator->services();
-
     foreach ($options as $fixer => $options) {
 
-        if ($options) {
+        if (is_bool($options)) {
 
-            $fixer = $services->set($fixer);
-
-            if (is_array($options)) {
-                $fixer->call('configure', [ $options ]);
+            if ($options) {
+                $config->rule($fixer);
+            } else {
+                $config->skip([ $fixer ]);
             }
 
+        }
+
+        if (is_array($options)) {
+            $config->ruleWithConfiguration($fixer, $options);
         }
 
     }

@@ -9,9 +9,9 @@ use PhpCsFixer\Fixer\Basic\EncodingFixer;
 use PhpCsFixer\Fixer\Basic\NonPrintableCharacterFixer;
 use PhpCsFixer\Fixer\Basic\OctalNotationFixer;
 use PhpCsFixer\Fixer\Basic\PsrAutoloadingFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         BracesFixer::class => false,
@@ -21,6 +21,6 @@ return static function (ContainerConfigurator $configurator): void {
         PsrAutoloadingFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

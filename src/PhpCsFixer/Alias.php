@@ -15,9 +15,9 @@ use PhpCsFixer\Fixer\Alias\NoMixedEchoPrintFixer;
 use PhpCsFixer\Fixer\Alias\PowToExponentiationFixer;
 use PhpCsFixer\Fixer\Alias\RandomApiMigrationFixer;
 use PhpCsFixer\Fixer\Alias\SetTypeToCastFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         ArrayPushFixer::class => true,
@@ -33,6 +33,6 @@ return static function (ContainerConfigurator $configurator): void {
         SetTypeToCastFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

@@ -21,9 +21,9 @@ use PhpCsFixer\Fixer\Operator\TernaryOperatorSpacesFixer;
 use PhpCsFixer\Fixer\Operator\TernaryToElvisOperatorFixer;
 use PhpCsFixer\Fixer\Operator\TernaryToNullCoalescingFixer;
 use PhpCsFixer\Fixer\Operator\UnaryOperatorSpacesFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         AssignNullCoalescingToCoalesceEqualFixer::class => false,
@@ -45,6 +45,6 @@ return static function (ContainerConfigurator $configurator): void {
         UnaryOperatorSpacesFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

@@ -13,9 +13,9 @@ use PhpCsFixer\Fixer\Import\NoUnusedImportsFixer;
 use PhpCsFixer\Fixer\Import\OrderedImportsFixer;
 use PhpCsFixer\Fixer\Import\SingleImportPerStatementFixer;
 use PhpCsFixer\Fixer\Import\SingleLineAfterImportsFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         FullyQualifiedStrictTypesFixer::class => true,
@@ -29,6 +29,6 @@ return static function (ContainerConfigurator $configurator): void {
         SingleLineAfterImportsFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

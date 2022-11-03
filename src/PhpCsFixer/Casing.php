@@ -13,9 +13,9 @@ use PhpCsFixer\Fixer\Casing\MagicConstantCasingFixer;
 use PhpCsFixer\Fixer\Casing\MagicMethodCasingFixer;
 use PhpCsFixer\Fixer\Casing\NativeFunctionCasingFixer;
 use PhpCsFixer\Fixer\Casing\NativeFunctionTypeDeclarationCasingFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         ClassReferenceNameCasingFixer::class => true,
@@ -29,6 +29,6 @@ return static function (ContainerConfigurator $configurator): void {
         NativeFunctionTypeDeclarationCasingFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

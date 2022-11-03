@@ -22,9 +22,9 @@ use PhpCsFixer\Fixer\ClassNotation\SelfStaticAccessorFixer;
 use PhpCsFixer\Fixer\ClassNotation\SingleClassElementPerStatementFixer;
 use PhpCsFixer\Fixer\ClassNotation\SingleTraitInsertPerStatementFixer;
 use PhpCsFixer\Fixer\ClassNotation\VisibilityRequiredFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         ClassAttributesSeparationFixer::class => false,
@@ -52,6 +52,6 @@ return static function (ContainerConfigurator $configurator): void {
         VisibilityRequiredFixer::class => [ 'elements' => [ 'method', 'property' ] ],
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

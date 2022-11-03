@@ -22,9 +22,9 @@ use PhpCsFixer\Fixer\ControlStructure\SwitchCaseSpaceFixer;
 use PhpCsFixer\Fixer\ControlStructure\SwitchContinueToBreakFixer;
 use PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer;
 use PhpCsFixer\Fixer\ControlStructure\YodaStyleFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         ControlStructureContinuationPositionFixer::class => true,
@@ -47,6 +47,6 @@ return static function (ContainerConfigurator $configurator): void {
         YodaStyleFixer::class => false,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

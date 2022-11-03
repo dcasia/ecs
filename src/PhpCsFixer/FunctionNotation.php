@@ -26,9 +26,9 @@ use PhpCsFixer\Fixer\FunctionNotation\SingleLineThrowFixer;
 use PhpCsFixer\Fixer\FunctionNotation\StaticLambdaFixer;
 use PhpCsFixer\Fixer\FunctionNotation\UseArrowFunctionsFixer;
 use PhpCsFixer\Fixer\FunctionNotation\VoidReturnFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         CombineNestedDirnameFixer::class => true,
@@ -48,7 +48,7 @@ return static function (ContainerConfigurator $configurator): void {
         PhpdocToPropertyTypeFixer::class => false,
         PhpdocToReturnTypeFixer::class => false,
 
-        RegularCallableCallFixer::class => FALSE,
+        RegularCallableCallFixer::class => false,
         ReturnTypeDeclarationFixer::class => true,
         SingleLineThrowFixer::class => false,
         StaticLambdaFixer::class => false,
@@ -56,6 +56,6 @@ return static function (ContainerConfigurator $configurator): void {
         VoidReturnFixer::class => false,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };

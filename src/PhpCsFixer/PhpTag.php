@@ -9,9 +9,9 @@ use PhpCsFixer\Fixer\PhpTag\EchoTagSyntaxFixer;
 use PhpCsFixer\Fixer\PhpTag\FullOpeningTagFixer;
 use PhpCsFixer\Fixer\PhpTag\LinebreakAfterOpeningTagFixer;
 use PhpCsFixer\Fixer\PhpTag\NoClosingTagFixer;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ContainerConfigurator $configurator): void {
+return static function (ECSConfig $config): void {
 
     $options = [
         BlankLineAfterOpeningTagFixer::class => true,
@@ -21,6 +21,6 @@ return static function (ContainerConfigurator $configurator): void {
         NoClosingTagFixer::class => true,
     ];
 
-    register_fixers($configurator, $options);
+    register_fixers($config, $options);
 
 };
