@@ -4,6 +4,7 @@ declare (strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
+use PhpCsFixer\Fixer\ControlStructure\ControlStructureBracesFixer;
 use PhpCsFixer\Fixer\ControlStructure\ControlStructureContinuationPositionFixer;
 use PhpCsFixer\Fixer\ControlStructure\ElseifFixer;
 use PhpCsFixer\Fixer\ControlStructure\EmptyLoopBodyFixer;
@@ -27,6 +28,7 @@ use Symplify\EasyCodingStandard\Config\ECSConfig;
 return static function (ECSConfig $config): void {
 
     $options = [
+        ControlStructureBracesFixer::class => true,
         ControlStructureContinuationPositionFixer::class => true,
         ElseifFixer::class => false,
         EmptyLoopBodyFixer::class => [ 'style' => 'braces' ],
@@ -35,7 +37,7 @@ return static function (ECSConfig $config): void {
         NoAlternativeSyntaxFixer::class => true,
         NoBreakCommentFixer::class => false,
         NoSuperfluousElseifFixer::class => true,
-        NoTrailingCommaInListCallFixer::class => true,
+//        NoTrailingCommaInListCallFixer::class => true,
         NoUnneededControlParenthesesFixer::class => true,
         NoUnneededCurlyBracesFixer::class => true,
         NoUselessElseFixer::class => true,
@@ -43,7 +45,7 @@ return static function (ECSConfig $config): void {
         SwitchCaseSemicolonToColonFixer::class => true,
         SwitchCaseSpaceFixer::class => true,
         SwitchContinueToBreakFixer::class => true,
-        TrailingCommaInMultilineFixer::class => true,
+        TrailingCommaInMultilineFixer::class => [ 'elements' => [ 'arguments', 'arrays', 'match', 'parameters' ] ],
         YodaStyleFixer::class => false,
     ];
 

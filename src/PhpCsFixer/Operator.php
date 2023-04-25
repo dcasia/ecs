@@ -13,6 +13,8 @@ use PhpCsFixer\Fixer\Operator\NewWithBracesFixer;
 use PhpCsFixer\Fixer\Operator\NoSpaceAroundDoubleColonFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSpaceFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSuccessorSpaceFixer;
+use PhpCsFixer\Fixer\Operator\NoUselessConcatOperatorFixer;
+use PhpCsFixer\Fixer\Operator\NoUselessNullsafeOperatorFixer;
 use PhpCsFixer\Fixer\Operator\ObjectOperatorWithoutWhitespaceFixer;
 use PhpCsFixer\Fixer\Operator\OperatorLinebreakFixer;
 use PhpCsFixer\Fixer\Operator\StandardizeIncrementFixer;
@@ -35,6 +37,8 @@ return static function (ECSConfig $config): void {
         NoSpaceAroundDoubleColonFixer::class => true,
         NotOperatorWithSpaceFixer::class => false,
         NotOperatorWithSuccessorSpaceFixer::class => false,
+        NoUselessConcatOperatorFixer::class => true,
+        NoUselessNullsafeOperatorFixer::class => true,
         ObjectOperatorWithoutWhitespaceFixer::class => true,
         OperatorLinebreakFixer::class => true,
         StandardizeIncrementFixer::class => true,

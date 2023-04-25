@@ -5,6 +5,7 @@ declare (strict_types = 1);
 namespace DigitalCreative\ECS\PhpCsFixer;
 
 use PhpCsFixer\Fixer\FunctionNotation\CombineNestedDirnameFixer;
+use PhpCsFixer\Fixer\FunctionNotation\DateTimeCreateFromFormatCallFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FopenFlagOrderFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FopenFlagsFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FunctionDeclarationFixer;
@@ -32,6 +33,7 @@ return static function (ECSConfig $config): void {
 
     $options = [
         CombineNestedDirnameFixer::class => true,
+        DateTimeCreateFromFormatCallFixer::class => true,
         FopenFlagOrderFixer::class => true,
         FopenFlagsFixer::class => true,
         FunctionDeclarationFixer::class => true,

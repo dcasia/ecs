@@ -19,7 +19,7 @@ return static function (ECSConfig $config): void {
         ArraySyntaxFixer::class => true,
         NoMultilineWhitespaceAroundDoubleArrowFixer::class => true,
         NormalizeIndexBraceFixer::class => true,
-        NoTrailingCommaInSinglelineArrayFixer::class => true,
+//        NoTrailingCommaInSinglelineArrayFixer::class => true,
         NoWhitespaceBeforeCommaInArrayFixer::class => true,
         TrimArraySpacesFixer::class => false,
         WhitespaceAfterCommaInArrayFixer::class => true,

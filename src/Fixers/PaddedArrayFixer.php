@@ -27,12 +27,16 @@ final class PaddedArrayFixer extends AbstractFixer
 
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isAnyTokenKindsFound([ CT::T_ARRAY_SQUARE_BRACE_OPEN ]);
+        return $tokens->isAnyTokenKindsFound([ CT::T_ARRAY_SQUARE_BRACE_OPEN, T_VARIABLE ]);
     }
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
         for ($index = 0, $c = $tokens->count(); $index < $c; ++$index) {
+
+            if ($tokens[ $index ]->equals('[')) {
+                $this->fixVariable($tokens, $index);
+            }
 
             if ($tokens[ $index ]->isGivenKind([ CT::T_ARRAY_SQUARE_BRACE_OPEN ])) {
                 $this->fixArray($tokens, $index);
@@ -41,7 +45,7 @@ final class PaddedArrayFixer extends AbstractFixer
         }
     }
 
-    private function fixArray(Tokens $tokens, int $openingBracketIndex)
+    private function fixArray(Tokens $tokens, int $openingBracketIndex): void
     {
         /**
          * @var Token $openingBracket
@@ -57,7 +61,8 @@ final class PaddedArrayFixer extends AbstractFixer
          * [    ] => []
          */
         if ($closingBracketIndex === $nextMeaningFulTokenIndex) {
-            return $tokens->clearRange($openingBracketIndex + 1, $closingBracketIndex - 1);
+            $tokens->clearRange($openingBracketIndex + 1, $closingBracketIndex - 1);
+            return;
         }
 
         /**
@@ -78,6 +83,44 @@ final class PaddedArrayFixer extends AbstractFixer
 
         if ($closingBracketIndex - $previousMeaningFulTokenIndex === 1) {
             $tokens->ensureWhitespaceAtIndex($previousMeaningFulTokenIndex, 1, ' ');
+        }
+    }
+
+    private function fixVariable(Tokens $tokens, int $openingBracketIndex): void
+    {
+        /**
+         * $data[]
+         */
+        if ($tokens[ $openingBracketIndex + 1 ]->equals(']')) {
+            return;
+        }
+
+        /**
+         * $data[0] => $data[ 0]
+         */
+        $tokens->ensureWhitespaceAtIndex($openingBracketIndex + 1, 0, ' ');
+
+        while (true) {
+
+            $current = $tokens[ $openingBracketIndex++ ] ?? null;
+
+            if ($current === null) {
+                break;
+            }
+
+            if ($current->equals(']')) {
+
+                /**
+                 * $data[0] => $data[0 ]
+                 */
+                if (!$tokens[ $openingBracketIndex - 2 ]->isWhitespace()) {
+                    $tokens->ensureWhitespaceAtIndex($openingBracketIndex - 1, 0, ' ');
+                }
+
+                break;
+
+            }
+
         }
     }
 }
