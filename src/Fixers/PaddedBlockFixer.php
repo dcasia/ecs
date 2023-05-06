@@ -4,126 +4,294 @@ declare (strict_types = 1);
 
 namespace DigitalCreative\ECS\Fixers;
 
+use Exception;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\Fixer\WhitespacesAwareFixerInterface;
-use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
-use PhpCsFixer\Preg;
-use PhpCsFixer\Tokenizer\CT;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use SplFileInfo;
-use const T_WHITESPACE;
+use Throwable;
 
 final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFixerInterface
 {
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Arrays should always have a space between start and ending brackets.',
-            [
-                new CodeSample("<?php\n\$sample = [ 1,2,3 ];"),
-            ]
+            'This fixer improves on the readability of PSR-12 by adding a negative space between blocks (if/else/while etc..) making it clearer and easier to read and understand.',
+            []
         );
     }
 
     public function isCandidate(Tokens $tokens): bool
     {
-        return true;
+        return $tokens->isAnyTokenKindsFound([
+            T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF, T_FUNCTION,
+        ]);
     }
 
     public function getPriority(): int
     {
-        return 36;
+        return 1000;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        for ($index = 0, $c = $tokens->count(); $index < $c; ++$index) {
+        for ($index = 0, $count = $tokens->count(); $index < $count; ++$index) {
 
-            if ($tokens[ $index ]->equals('}')) {
-                $this->fixArray($tokens[ $index ], $index, $tokens);
+            $token = $this->token($tokens, $index);
+
+            if ($token->isGivenKind([ T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF ])) {
+
+                $this->fixBlock($tokens, $index);
+
+            } else if ($token->isGivenKind([ T_FUNCTION ])) {
+
+                /**
+                 * Anonymous function
+                 */
+                if ($this->token($tokens, $tokens->getNextMeaningfulToken($index))->equals('(')) {
+
+                    $this->fixBlock($tokens, $index);
+
+                } else {
+
+                    $this->ensureNotPadded($tokens, $index);
+
+                }
+
             }
 
         }
     }
 
-    private function fixArray(Token $blockEndToken, int $blockEndIndex, Tokens $tokens)
+    /**
+     * @throws Exception
+     */
+    private function ensureNotPadded(Tokens $tokens, int $start): void
     {
+        if ($boundaries = $this->getBlockBoundaries($tokens, $start)) {
+
+            /**
+             *
+             * public function name()
+             * {
+             *   •
+             *   // body
+             *   •
+             * }
+             */
+            if ($this->countNewLines($tokens, $boundaries[ 0 ] + 1) > 1) {
+                $this->removeLineAt($tokens, $boundaries[ 0 ] + 1);
+            }
+
+            if ($this->countNewLines($tokens, $boundaries[ 1 ] - 1) > 1) {
+                $this->removeLineAt($tokens, $boundaries[ 1 ] - 1);
+            }
+
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function fixBlock(Tokens $tokens, int $start): void
+    {
+        [ $blockStartIndex, $blockEndIndex ] = $this->getBlockBoundaries($tokens, $start) ?? [ null, null ];
+
+        if ($blockStartIndex === null || $blockEndIndex === null) {
+            return;
+        }
+
         /**
-         * @var Token $blockEndToken
-         */
-        $blockStartIndex = $tokens->findBlockStart(Tokens::BLOCK_TYPE_CURLY_BRACE, $blockEndIndex);
-        $blockStartToken = $tokens[ $blockStartIndex ];
-
-        $newLine = $this->whitespacesConfig->getLineEnding() . $this->whitespacesConfig->getIndent();
-
-        [ $innerStart, $innerEnd ] = [ $blockStartIndex + 1, $blockEndIndex - 1 ];
-
-        $firstMeaningfulToken = $this->token(
-            $tokens, $firstMeaningfulTokenIndex = $tokens->getNextMeaningfulToken($blockStartIndex)
-        );
-
-        /**
-         * If previous token before the first meaningful token is a newline ignore.
-         *
          * if() {
          *   •
-         *   $firstMeaningfulToken = true
+         *   return
+         *   •
          * }
          */
-        if ($this->token($tokens, $firstMeaningfulTokenIndex - 1)->isWhitespace($newLine)) {
-           return;
-        }
+//        if ($this->token($tokens, $tokens->getNextMeaningfulToken($blockStartIndex))->isGivenKind(T_RETURN)) {
+//
+//            $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
+//
+//            return;
+//
+//        }
 
-        $lines = $this->countLinesBetween($tokens, $innerStart + 1, $innerEnd - 1);
+        /**
+         * if/else/try/catch() {
+         *   •
+         *   // body
+         *   •
+         * }
+         */
+        if ($this->countLinesBetween($tokens, $blockStartIndex + 1, $blockEndIndex - 1) === 2) {
 
-        if ($lines > 0) {
+            if ($this->isMultiLevelBlock($tokens, $blockStartIndex, $blockEndIndex) === false) {
 
-            $tokens->insertAt(
-                $innerStart + 1, new Token([ T_WHITESPACE, $this->whitespacesConfig->getLineEnding() ])
-            );
+                $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
 
-        }
+                return;
 
-        return;
-
-        dd($lines);
-        dd($tokens[ $innerStart + 1 ], $tokens[ $innerEnd - 1 ]);
-
-        if ($tokens[ $blockStartIndex + 1 ]->isWhitespace($newLine)) {
-
-//            $tokens[ $blockStartIndex + 2 ];
-
-        }
-
-        if ($tokens[ $blockEndIndex - 1 ]->isWhitespace($newLine)) {
+            }
 
         }
 
-        $lineEnding = $this->whitespacesConfig->getLineEnding();
+        /**
+         * if() {
+         *   •
+         *   // body
+         * }
+         */
+        if ($this->countNewLines($tokens, $blockStartIndex + 1) !== 2) {
+            $this->ensureWhitespaceAtIndex($tokens, $blockStartIndex + 1);
+        }
 
-        $newline1 = new Token([ T_WHITESPACE, $lineEnding ]);
-        $newline2 = new Token([ T_WHITESPACE, $lineEnding ]);
+        /**
+         * if() {
+         *   // body
+         *   •
+         * }
+         */
+        if ($this->countNewLines($tokens, $blockEndIndex - 1) !== 2) {
+            $this->ensureWhitespaceAtIndex($tokens, $blockEndIndex - 1);
+        }
+    }
 
-        $tokens->insertAt($blockEndIndex, $newline1);
-//        $tokens->insertAt($blockStartIndex-1, $newline2);
+    /**
+     * @throws Exception
+     */
+    private function unwrapNewLines(Tokens $tokens, int $start, int $end): void
+    {
+        if ($this->countNewLines($tokens, $start + 1)) {
+            $this->removeLineAt($tokens, $start + 1);
+        }
 
-//        dd($blockStartIndex, $blockEndIndex);
+        if ($this->countNewLines($tokens, $end - 1)) {
+            $this->removeLineAt($tokens, $end - 1);
+        }
+    }
 
+    private function isMultiLevelBlock(Tokens $tokens, int $start, int $end): bool
+    {
+        $next = $tokens->getNextMeaningfulToken($end);
+        $previous = $tokens->getPrevMeaningfulToken($start);
+
+        if ($this->token($tokens, $previous)->equals(')')) {
+
+            $blockStart = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $previous);
+            $previous = $tokens->getPrevMeaningfulToken($blockStart);
+
+            /**
+             * else if vs elseif
+             */
+            if ($this->token($tokens, $previous)->isGivenKind([ T_IF ])) {
+                $previous = $tokens->getPrevMeaningfulToken($previous);
+            }
+
+        }
+
+        return $this->token($tokens, $next)->isGivenKind([ T_ELSE, T_ELSEIF, T_CATCH, T_DO ])
+            || $this->token($tokens, $previous)->isGivenKind([ T_ELSE, T_ELSEIF, T_CATCH, T_DO ]);
+    }
+
+    private function getBlockBoundaries(Tokens $tokens, int $start): ?array
+    {
+        $blockStartIndex = $tokens->getNextTokenOfKind($start, [ '{' ]);
+
+        try {
+
+            $blockEndIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $blockStartIndex);
+
+        } catch (Throwable) {
+
+            return null;
+
+        }
+
+        /**
+         * If body is empty
+         * public function name()
+         * {
+         * }
+         */
+        if ($blockEndIndex - $blockStartIndex <= 2) {
+            return null;
+        }
+
+        return [ $blockStartIndex, $blockEndIndex ];
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function ensureWhitespaceAtIndex(Tokens $tokens, int $index): void
+    {
+        if ($this->token($tokens, $index)->isWhitespace() === false) {
+            throw new Exception('Currently not an whitespace...');
+        }
+
+        $tokens[ $index ] = new Token(
+            $this->whitespacesConfig->getLineEnding() .
+            $this->token($tokens, $index)->getContent()
+        );
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function removeLineAt(Tokens $tokens, int $index): void
+    {
+        if ($this->token($tokens, $index)->isWhitespace() === false) {
+            throw new Exception('Currently not an whitespace...');
+        }
+
+        $tokens[ $index ] = new Token(
+            $this->whitespacesConfig->getLineEnding() .
+            $this->getIndent($tokens, $index)
+        );
+    }
+
+    private function getIndent(Tokens $tokens, int $index): string
+    {
+        $lines = preg_split('~(\n\s+?)~', $this->token($tokens, $index)->getContent());
+
+        if (count($lines) === 0 || !is_array($lines)) {
+            return $this->whitespacesConfig->getIndent();
+        }
+
+        while (isset($lines[ 0 ]) && $lines[ 0 ] === '') {
+            array_shift($lines);
+        }
+
+        return str_repeat(
+            string: $this->whitespacesConfig->getIndent(),
+            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ]))
+        );
+    }
+
+    private function countNewLines(Tokens $tokens, int $index): int
+    {
+        $token = $this->token($tokens, $index);
+
+        if ($token->isWhitespace()) {
+            return substr_count($token->getContent(), $this->whitespacesConfig->getLineEnding());
+        }
+
+        return 0;
     }
 
     private function countLinesBetween(Tokens $tokens, int $start, int $end): int
     {
-        $newLine = $this->whitespacesConfig->getLineEnding() . $this->whitespacesConfig->getIndent();
         $lines = 0;
 
         foreach (range($start, $end) as $index) {
 
-            $token = $this->token($tokens, $index);
-
-            if ($token->isWhitespace($newLine) && Preg::match('/\\R/', $token->getContent())) {
+            if ($this->countNewLines($tokens, $index)) {
                 $lines++;
             }
 
@@ -135,25 +303,5 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     private function token(Tokens $tokens, int $index): Token
     {
         return $tokens[ $index ];
-    }
-
-    private function getExpectedIndentAt(\PhpCsFixer\Tokenizer\Tokens $tokens, int $index): string
-    {
-        $index = $tokens->getPrevMeaningfulToken($index);
-        $indent = $this->whitespacesConfig->getIndent();
-        for ($i = $index; $i >= 0; --$i) {
-            if ($tokens[ $i ]->equals(')')) {
-                $i = $tokens->findBlockStart(\PhpCsFixer\Tokenizer\Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $i);
-            }
-            $currentIndent = $this->getIndentAt($tokens, $i);
-            if (null === $currentIndent) {
-                continue;
-            }
-            if ($this->currentLineRequiresExtraIndentLevel($tokens, $i, $index)) {
-                return $currentIndent . $indent;
-            }
-            return $currentIndent;
-        }
-        return $indent;
     }
 }
