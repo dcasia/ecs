@@ -268,6 +268,10 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
             array_shift($lines);
         }
 
+        if (empty($lines)) {
+            return $this->whitespacesConfig->getIndent();
+        }
+
         return str_repeat(
             string: $this->whitespacesConfig->getIndent(),
             times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ]))
