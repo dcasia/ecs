@@ -2,8 +2,8 @@
     "name": "digital-creative/ecs",
     "description": "Standard code style configuration",
     "require": {
-        "php": ">=7.4.0",
-        "symplify/easy-coding-standard": "^11.3.2"
+        "php": ">=8.0",
+        "symplify/easy-coding-standard": "^11.3.4"
     },
     "autoload": {
         "psr-4": {
