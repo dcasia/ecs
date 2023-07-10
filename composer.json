@@ -3,7 +3,7 @@
     "description": "Standard code style configuration",
     "require": {
         "php": ">=8.0",
-        "symplify/easy-coding-standard": "^11.3.4"
+        "symplify/easy-coding-standard": "11.4.5"
     },
     "autoload": {
         "psr-4": {
