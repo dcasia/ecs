@@ -21,7 +21,7 @@ return register_fixers([
 //        NoTrailingCommaInSinglelineArrayFixer::class => true,
     NoWhitespaceBeforeCommaInArrayFixer::class => true,
     ReturnToYieldFromFixer::class => true,
-    TrimArraySpacesFixer::class => false,
+    TrimArraySpacesFixer::class => true,
     WhitespaceAfterCommaInArrayFixer::class => true,
     YieldFromArrayToYieldsFixer::class => false,
 ]);

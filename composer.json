@@ -2,7 +2,7 @@
     "name": "digital-creative/ecs",
     "description": "Standard code style configuration",
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.2",
         "symplify/easy-coding-standard": "12.2.0"
     },
     "autoload": {

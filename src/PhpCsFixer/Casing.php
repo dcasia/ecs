@@ -18,7 +18,7 @@ use PhpCsFixer\Fixer\Casing\NativeTypeDeclarationCasingFixer;
 return register_fixers([
     ClassReferenceNameCasingFixer::class => true,
     ConstantCaseFixer::class => true,
-    IntegerLiteralCaseFixer::class => false,
+    IntegerLiteralCaseFixer::class => true,
     LowercaseKeywordsFixer::class => true,
     LowercaseStaticReferenceFixer::class => true,
     MagicConstantCasingFixer::class => true,

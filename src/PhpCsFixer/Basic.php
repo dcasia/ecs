@@ -18,15 +18,7 @@ use PhpCsFixer\Fixer\Basic\SingleLineEmptyBodyFixer;
 
 return register_fixers([
 //    BracesFixer::class => false,
-    BracesPositionFixer::class => [
-        'allow_single_line_anonymous_functions' => false,
-        'allow_single_line_empty_anonymous_classes' => false,
-        'anonymous_classes_opening_brace' => 'next_line_unless_newline_at_signature_end',
-        'anonymous_functions_opening_brace' => 'same_line',
-        'classes_opening_brace' => 'next_line_unless_newline_at_signature_end',
-        'control_structures_opening_brace' => 'same_line',
-        'functions_opening_brace' => 'next_line_unless_newline_at_signature_end',
-    ],
+    BracesPositionFixer::class => true,
 //    CurlyBracesPositionFixer::class => false,
     EncodingFixer::class => true,
     NoMultipleStatementsPerLineFixer::class => true,
@@ -35,5 +27,5 @@ return register_fixers([
     NumericLiteralSeparatorFixer::class => [ 'strategy' => 'no_separator' ],
     OctalNotationFixer::class => true,
     PsrAutoloadingFixer::class => true,
-    SingleLineEmptyBodyFixer::class => true,
+    SingleLineEmptyBodyFixer::class => false,
 ]);
