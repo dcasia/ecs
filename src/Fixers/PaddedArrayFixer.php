@@ -21,7 +21,7 @@ final class PaddedArrayFixer extends AbstractFixer
             'Arrays should always have a space between start and ending brackets.',
             [
                 new CodeSample("<?php\n\$sample = [ 1,2,3 ];"),
-            ]
+            ],
         );
     }
 
@@ -32,7 +32,7 @@ final class PaddedArrayFixer extends AbstractFixer
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        for ($index = 0, $c = $tokens->count(); $index < $c; ++$index) {
+        for ($index = 0, $c = $tokens->count(); $index < $c; $index++) {
 
             if ($tokens[ $index ]->equals('[')) {
                 $this->fixVariable($tokens, $index);
@@ -61,8 +61,11 @@ final class PaddedArrayFixer extends AbstractFixer
          * [    ] => []
          */
         if ($closingBracketIndex === $nextMeaningFulTokenIndex) {
+
             $tokens->clearRange($openingBracketIndex + 1, $closingBracketIndex - 1);
+
             return;
+
         }
 
         /**

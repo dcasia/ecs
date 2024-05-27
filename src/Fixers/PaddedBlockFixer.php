@@ -20,7 +20,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     {
         return new FixerDefinition(
             'This fixer improves on the readability of PSR-12 by adding a negative space between blocks (if/else/while etc..) making it clearer and easier to read and understand.',
-            []
+            [],
         );
     }
 
@@ -41,7 +41,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
      */
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        for ($index = 0, $count = $tokens->count(); $index < $count; ++$index) {
+        for ($index = 0, $count = $tokens->count(); $index < $count; $index++) {
 
             $token = $this->token($tokens, $index);
 
@@ -237,7 +237,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
         $tokens[ $index ] = new Token(
             $this->whitespacesConfig->getLineEnding() .
-            $this->token($tokens, $index)->getContent()
+            $this->token($tokens, $index)->getContent(),
         );
     }
 
@@ -252,7 +252,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
         $tokens[ $index ] = new Token(
             $this->whitespacesConfig->getLineEnding() .
-            $this->getIndent($tokens, $index)
+            $this->getIndent($tokens, $index),
         );
     }
 
@@ -274,7 +274,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
         return str_repeat(
             string: $this->whitespacesConfig->getIndent(),
-            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ]))
+            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ])),
         );
     }
 

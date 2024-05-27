@@ -1,6 +1,5 @@
 # Installation
 
-
 - Add this repository to composer.json
 
 ```json
@@ -24,41 +23,18 @@ declare(strict_types = 1);
 use DigitalCreative\ECS\ValueObject\SetList;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $config->parallel();
-    $config->paths([
+return ECSConfig::configure()
+    ->withParallel()
+    ->withPaths([
         __DIR__ . '/app',
         __DIR__ . '/database',
         __DIR__ . '/config',
         __DIR__ . '/routes',
         __DIR__ . '/tests',
+    ])
+    ->withSets([
+        SetList::DIGITAL_CREATIVE,
     ]);
-
-    $config->import(SetList::PHP_CS_FIXER);
-    $config->import(SetList::CUSTOM);
-
-    /**
-     * Ignore specific fixers imported via above set lists
-     */
-    $config->skip([
-        // IgnoreFixer::class
-        NoBlankLinesAfterClassOpeningFixer::class,
-        ClassDefinitionFixer::class,
-    ]);
-
-    /**
-     * Or Manually include new fixers
-     */
-    $options = [
-        // ManuallyConfigureFixer::class => [ 'space' => 'single' ],
-        // AddFixerWithDefaultConfiguration::class => true,
-        // IgnoreFixer::class => false,
-    ];
-
-    register_fixers($config, $options);
-
-};
 ```
 
 - Run the `./vendor/bin/ecs check --fix`

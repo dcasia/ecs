@@ -9,18 +9,12 @@ use PhpCsFixer\Fixer\PhpTag\EchoTagSyntaxFixer;
 use PhpCsFixer\Fixer\PhpTag\FullOpeningTagFixer;
 use PhpCsFixer\Fixer\PhpTag\LinebreakAfterOpeningTagFixer;
 use PhpCsFixer\Fixer\PhpTag\NoClosingTagFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
+return register_fixers([
+    BlankLineAfterOpeningTagFixer::class => true,
+    EchoTagSyntaxFixer::class => true,
+    FullOpeningTagFixer::class => true,
+    LinebreakAfterOpeningTagFixer::class => true,
+    NoClosingTagFixer::class => true,
+]);
 
-    $options = [
-        BlankLineAfterOpeningTagFixer::class => true,
-        EchoTagSyntaxFixer::class => true,
-        FullOpeningTagFixer::class => true,
-        LinebreakAfterOpeningTagFixer::class => true,
-        NoClosingTagFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
