@@ -4,8 +4,9 @@ declare (strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
-use PhpCsFixer\Fixer\ListNotation\ListSyntaxFixer;
+use PhpCsFixer\Fixer\ClassUsage\DateTimeImmutableFixer;
 
 return register_fixers([
-    ListSyntaxFixer::class => true,
+    DateTimeImmutableFixer::class => true,
 ]);
+

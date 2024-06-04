@@ -9,20 +9,15 @@ use PhpCsFixer\Fixer\Comment\HeaderCommentFixer;
 use PhpCsFixer\Fixer\Comment\MultilineCommentOpeningClosingFixer;
 use PhpCsFixer\Fixer\Comment\NoEmptyCommentFixer;
 use PhpCsFixer\Fixer\Comment\NoTrailingWhitespaceInCommentFixer;
+use PhpCsFixer\Fixer\Comment\SingleLineCommentSpacingFixer;
 use PhpCsFixer\Fixer\Comment\SingleLineCommentStyleFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        CommentToPhpdocFixer::class => true,
-        HeaderCommentFixer::class => false,
-        MultilineCommentOpeningClosingFixer::class => true,
-        NoEmptyCommentFixer::class => true,
-        NoTrailingWhitespaceInCommentFixer::class => true,
-        SingleLineCommentStyleFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    CommentToPhpdocFixer::class => true,
+    HeaderCommentFixer::class => false,
+    MultilineCommentOpeningClosingFixer::class => true,
+    NoEmptyCommentFixer::class => true,
+    NoTrailingWhitespaceInCommentFixer::class => true,
+    SingleLineCommentSpacingFixer::class => true,
+    SingleLineCommentStyleFixer::class => true,
+]);

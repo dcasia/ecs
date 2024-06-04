@@ -15,24 +15,18 @@ use PhpCsFixer\Fixer\Alias\NoMixedEchoPrintFixer;
 use PhpCsFixer\Fixer\Alias\PowToExponentiationFixer;
 use PhpCsFixer\Fixer\Alias\RandomApiMigrationFixer;
 use PhpCsFixer\Fixer\Alias\SetTypeToCastFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
+return register_fixers([
+    ArrayPushFixer::class,
+    BacktickToShellExecFixer::class => false,
+    EregToPregFixer::class => true,
+    MbStrFunctionsFixer::class => false,
+    ModernizeStrposFixer::class => false,
+    NoAliasFunctionsFixer::class => true,
+    NoAliasLanguageConstructCallFixer::class => true,
+    NoMixedEchoPrintFixer::class => true,
+    PowToExponentiationFixer::class => true,
+    RandomApiMigrationFixer::class => true,
+    SetTypeToCastFixer::class => true,
+]);
 
-    $options = [
-        ArrayPushFixer::class => true,
-        BacktickToShellExecFixer::class => false,
-        EregToPregFixer::class => true,
-        MbStrFunctionsFixer::class => false,
-        ModernizeStrposFixer::class => false,
-        NoAliasFunctionsFixer::class => true,
-        NoAliasLanguageConstructCallFixer::class => true,
-        NoMixedEchoPrintFixer::class => true,
-        PowToExponentiationFixer::class => true,
-        RandomApiMigrationFixer::class => true,
-        SetTypeToCastFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};

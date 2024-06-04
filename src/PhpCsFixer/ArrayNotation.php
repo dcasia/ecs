@@ -9,22 +9,20 @@ use PhpCsFixer\Fixer\ArrayNotation\NoMultilineWhitespaceAroundDoubleArrowFixer;
 use PhpCsFixer\Fixer\ArrayNotation\NormalizeIndexBraceFixer;
 use PhpCsFixer\Fixer\ArrayNotation\NoTrailingCommaInSinglelineArrayFixer;
 use PhpCsFixer\Fixer\ArrayNotation\NoWhitespaceBeforeCommaInArrayFixer;
+use PhpCsFixer\Fixer\ArrayNotation\ReturnToYieldFromFixer;
 use PhpCsFixer\Fixer\ArrayNotation\TrimArraySpacesFixer;
 use PhpCsFixer\Fixer\ArrayNotation\WhitespaceAfterCommaInArrayFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
+use PhpCsFixer\Fixer\ArrayNotation\YieldFromArrayToYieldsFixer;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        ArraySyntaxFixer::class => true,
-        NoMultilineWhitespaceAroundDoubleArrowFixer::class => true,
-        NormalizeIndexBraceFixer::class => true,
+return register_fixers([
+    ArraySyntaxFixer::class => true,
+    NoMultilineWhitespaceAroundDoubleArrowFixer::class => true,
+    NormalizeIndexBraceFixer::class => true,
 //        NoTrailingCommaInSinglelineArrayFixer::class => true,
-        NoWhitespaceBeforeCommaInArrayFixer::class => true,
-        TrimArraySpacesFixer::class => false,
-        WhitespaceAfterCommaInArrayFixer::class => true,
-    ];
+    NoWhitespaceBeforeCommaInArrayFixer::class => true,
+    ReturnToYieldFromFixer::class => true,
+    TrimArraySpacesFixer::class => true,
+    WhitespaceAfterCommaInArrayFixer::class => true,
+    YieldFromArrayToYieldsFixer::class => false,
+]);
 
-    register_fixers($config, $options);
-
-};

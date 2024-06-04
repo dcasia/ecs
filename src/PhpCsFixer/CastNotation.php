@@ -10,19 +10,13 @@ use PhpCsFixer\Fixer\CastNotation\ModernizeTypesCastingFixer;
 use PhpCsFixer\Fixer\CastNotation\NoShortBoolCastFixer;
 use PhpCsFixer\Fixer\CastNotation\NoUnsetCastFixer;
 use PhpCsFixer\Fixer\CastNotation\ShortScalarCastFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
+return register_fixers([
+    CastSpacesFixer::class => true,
+    LowercaseCastFixer::class => true,
+    ModernizeTypesCastingFixer::class => true,
+    NoShortBoolCastFixer::class => true,
+    NoUnsetCastFixer::class => true,
+    ShortScalarCastFixer::class => true,
+]);
 
-    $options = [
-        CastSpacesFixer::class => true,
-        LowercaseCastFixer::class => true,
-        ModernizeTypesCastingFixer::class => true,
-        NoShortBoolCastFixer::class => true,
-        NoUnsetCastFixer::class => true,
-        ShortScalarCastFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};

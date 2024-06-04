@@ -1,24 +1,27 @@
 <?php
 
 use Symplify\EasyCodingStandard\Config\ECSConfig;
+use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
-function register_fixers(ECSConfig $config, array $options): void
+function register_fixers(array $fixers): ECSConfigBuilder
 {
-    foreach ($options as $fixer => $options) {
+    $config = ECSConfig::configure();
+
+    foreach ($fixers as $fixer => $options) {
 
         if (is_bool($options)) {
 
             if ($options) {
-                $config->rule($fixer);
-            } else {
-                $config->skip([ $fixer ]);
+                $config->withRules([ $fixer ]);
             }
 
         }
 
         if (is_array($options)) {
-            $config->ruleWithConfiguration($fixer, $options);
+            $config->withConfiguredRule($fixer, $options);
         }
 
     }
+
+    return $config;
 }

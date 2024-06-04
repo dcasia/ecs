@@ -14,6 +14,7 @@ use PhpCsFixer\Fixer\ControlStructure\NoAlternativeSyntaxFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoBreakCommentFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoSuperfluousElseifFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoTrailingCommaInListCallFixer;
+use PhpCsFixer\Fixer\ControlStructure\NoUnneededBracesFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoUnneededControlParenthesesFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoUnneededCurlyBracesFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoUselessElseFixer;
@@ -23,32 +24,26 @@ use PhpCsFixer\Fixer\ControlStructure\SwitchCaseSpaceFixer;
 use PhpCsFixer\Fixer\ControlStructure\SwitchContinueToBreakFixer;
 use PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer;
 use PhpCsFixer\Fixer\ControlStructure\YodaStyleFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        ControlStructureBracesFixer::class => true,
-        ControlStructureContinuationPositionFixer::class => true,
-        ElseifFixer::class => false,
-        EmptyLoopBodyFixer::class => [ 'style' => 'braces' ],
-        EmptyLoopConditionFixer::class => true,
-        IncludeFixer::class => true,
-        NoAlternativeSyntaxFixer::class => true,
-        NoBreakCommentFixer::class => false,
-        NoSuperfluousElseifFixer::class => true,
+return register_fixers([
+    ControlStructureBracesFixer::class => true,
+    ControlStructureContinuationPositionFixer::class => true,
+    ElseifFixer::class => false,
+    EmptyLoopBodyFixer::class => [ 'style' => 'braces' ],
+    EmptyLoopConditionFixer::class => true,
+    IncludeFixer::class => true,
+    NoAlternativeSyntaxFixer::class => true,
+    NoBreakCommentFixer::class => false,
+    NoSuperfluousElseifFixer::class => true,
 //        NoTrailingCommaInListCallFixer::class => true,
-        NoUnneededControlParenthesesFixer::class => true,
-        NoUnneededCurlyBracesFixer::class => true,
-        NoUselessElseFixer::class => true,
-        SimplifiedIfReturnFixer::class => false,
-        SwitchCaseSemicolonToColonFixer::class => true,
-        SwitchCaseSpaceFixer::class => true,
-        SwitchContinueToBreakFixer::class => true,
-        TrailingCommaInMultilineFixer::class => [ 'elements' => [ 'arguments', 'arrays', 'match', 'parameters' ] ],
-        YodaStyleFixer::class => false,
-    ];
-
-    register_fixers($config, $options);
-
-};
+    NoUnneededBracesFixer::class => true,
+    NoUnneededControlParenthesesFixer::class => true,
+//    NoUnneededCurlyBracesFixer::class => true,
+    NoUselessElseFixer::class => true,
+    SimplifiedIfReturnFixer::class => false,
+    SwitchCaseSemicolonToColonFixer::class => true,
+    SwitchCaseSpaceFixer::class => true,
+    SwitchContinueToBreakFixer::class => true,
+    TrailingCommaInMultilineFixer::class => [ 'elements' => [ 'arguments', 'arrays', 'match', 'parameters' ] ],
+    YodaStyleFixer::class => false,
+]);
