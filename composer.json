@@ -3,15 +3,12 @@
     "description": "Standard code style configuration",
     "require": {
         "php": ">=8.2",
-        "symplify/easy-coding-standard": "12.2.0"
+        "symplify/easy-coding-standard": "^12.2"
     },
     "autoload": {
         "psr-4": {
             "DigitalCreative\\ECS\\": "src/"
-        },
-        "files": [
-            "helpers/functions.php"
-        ]
+        }
     },
     "config": {
         "sort-packages": true

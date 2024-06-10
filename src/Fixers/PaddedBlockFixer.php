@@ -114,13 +114,13 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
          *   •
          * }
          */
-//        if ($this->token($tokens, $tokens->getNextMeaningfulToken($blockStartIndex))->isGivenKind(T_RETURN)) {
-//
-//            $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
-//
-//            return;
-//
-//        }
+        //        if ($this->token($tokens, $tokens->getNextMeaningfulToken($blockStartIndex))->isGivenKind(T_RETURN)) {
+        //
+        //            $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
+        //
+        //            return;
+        //
+        //        }
 
         /**
          * if/else/try/catch() {
@@ -236,8 +236,8 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         }
 
         $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding() .
-            $this->token($tokens, $index)->getContent(),
+            $this->whitespacesConfig->getLineEnding()
+            . $this->token($tokens, $index)->getContent(),
         );
     }
 
@@ -251,8 +251,8 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         }
 
         $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding() .
-            $this->getIndent($tokens, $index),
+            $this->whitespacesConfig->getLineEnding()
+            . $this->getIndent($tokens, $index),
         );
     }
 
@@ -260,7 +260,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     {
         $lines = preg_split('~(\n\s+?)~', $this->token($tokens, $index)->getContent());
 
-        if (count($lines) === 0 || !is_array($lines)) {
+        if (count($lines) === 0 || ! is_array($lines)) {
             return $this->whitespacesConfig->getIndent();
         }
 

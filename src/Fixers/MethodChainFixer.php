@@ -124,6 +124,6 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
 
         }
 
-        return !($count === 2) && $tokens->isPartialCodeMultiline($head, $tail);
+        return ! ($count === 2) && $tokens->isPartialCodeMultiline($head, $tail);
     }
 }

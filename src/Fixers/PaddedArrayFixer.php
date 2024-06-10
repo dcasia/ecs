@@ -116,7 +116,7 @@ final class PaddedArrayFixer extends AbstractFixer
                 /**
                  * $data[0] => $data[0 ]
                  */
-                if (!$tokens[ $openingBracketIndex - 2 ]->isWhitespace()) {
+                if ( ! $tokens[ $openingBracketIndex - 2 ]->isWhitespace()) {
                     $tokens->ensureWhitespaceAtIndex($openingBracketIndex - 1, 0, ' ');
                 }
 
