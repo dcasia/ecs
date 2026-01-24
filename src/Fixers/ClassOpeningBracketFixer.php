@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\Fixers;
 
@@ -18,7 +18,7 @@ final class ClassOpeningBracketFixer extends AbstractFixer implements Whitespace
     {
         return new FixerDefinition(
             'There must be no blank lines between {} within interfaces / traits / classes',
-            []
+            [],
         );
     }
 

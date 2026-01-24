@@ -22,43 +22,26 @@
 declare(strict_types = 1);
 
 use DigitalCreative\ECS\ValueObject\SetList;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
+use PhpCsFixer\Fixer\ClassNotation\ClassDefinitionFixer;
+use PhpCsFixer\Fixer\ClassNotation\NoBlankLinesAfterClassOpeningFixer;
+use PhpCsFixer\Fixer\FunctionNotation\VoidReturnFixer;
 
-return static function (ECSConfig $config): void {
-
-    $config->parallel();
-    $config->paths([
+return register_fixers([
+    NoBlankLinesAfterClassOpeningFixer::class => false,
+    ClassDefinitionFixer::class => false,
+    VoidReturnFixer::class => true,
+])
+    ->withParallel()
+     ->withSets([ SetList::DIGITAL_CREATIVE ])
+    ->withPaths([
+        __DIR__,
         __DIR__ . '/app',
         __DIR__ . '/database',
         __DIR__ . '/config',
         __DIR__ . '/routes',
         __DIR__ . '/tests',
+        __DIR__ . '/ecs',
     ]);
-
-    $config->import(SetList::PHP_CS_FIXER);
-    $config->import(SetList::CUSTOM);
-
-    /**
-     * Ignore specific fixers imported via above set lists
-     */
-    $config->skip([
-        // IgnoreFixer::class
-        NoBlankLinesAfterClassOpeningFixer::class,
-        ClassDefinitionFixer::class,
-    ]);
-
-    /**
-     * Or Manually include new fixers
-     */
-    $options = [
-        // ManuallyConfigureFixer::class => [ 'space' => 'single' ],
-        // AddFixerWithDefaultConfiguration::class => true,
-        // IgnoreFixer::class => false,
-    ];
-
-    register_fixers($config, $options);
-
-};
 ```
 
 - Run the `./vendor/bin/ecs check --fix`

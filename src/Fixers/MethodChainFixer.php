@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\Fixers;
 
@@ -18,7 +18,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
     {
         return new FixerDefinition(
             'Chaining multiple methods should follow a consistent rule: either break everything in a new line, or keep everything in the same line.',
-            []
+            [],
         );
     }
 

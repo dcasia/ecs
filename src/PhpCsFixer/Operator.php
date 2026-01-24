@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
@@ -23,32 +23,25 @@ use PhpCsFixer\Fixer\Operator\TernaryOperatorSpacesFixer;
 use PhpCsFixer\Fixer\Operator\TernaryToElvisOperatorFixer;
 use PhpCsFixer\Fixer\Operator\TernaryToNullCoalescingFixer;
 use PhpCsFixer\Fixer\Operator\UnaryOperatorSpacesFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        AssignNullCoalescingToCoalesceEqualFixer::class => false,
-        BinaryOperatorSpacesFixer::class => true,
-        ConcatSpaceFixer::class => [ 'spacing' => 'one' ],
-        IncrementStyleFixer::class => [ 'style' => 'post' ],
-        LogicalOperatorsFixer::class => true,
-        NewWithBracesFixer::class => true,
-        NoSpaceAroundDoubleColonFixer::class => true,
-        NotOperatorWithSpaceFixer::class => false,
-        NotOperatorWithSuccessorSpaceFixer::class => false,
-        NoUselessConcatOperatorFixer::class => true,
-        NoUselessNullsafeOperatorFixer::class => true,
-        ObjectOperatorWithoutWhitespaceFixer::class => true,
-        OperatorLinebreakFixer::class => true,
-        StandardizeIncrementFixer::class => true,
-        StandardizeNotEqualsFixer::class => true,
-        TernaryOperatorSpacesFixer::class => true,
-        TernaryToElvisOperatorFixer::class => true,
-        TernaryToNullCoalescingFixer::class => true,
-        UnaryOperatorSpacesFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    AssignNullCoalescingToCoalesceEqualFixer::class => false,
+    BinaryOperatorSpacesFixer::class => true,
+    ConcatSpaceFixer::class => [ 'spacing' => 'one' ],
+    IncrementStyleFixer::class => [ 'style' => 'post' ],
+    LogicalOperatorsFixer::class => true,
+    NewWithBracesFixer::class => true,
+    NoSpaceAroundDoubleColonFixer::class => true,
+    NotOperatorWithSpaceFixer::class => false,
+    NotOperatorWithSuccessorSpaceFixer::class => false,
+    NoUselessConcatOperatorFixer::class => true,
+    NoUselessNullsafeOperatorFixer::class => true,
+    ObjectOperatorWithoutWhitespaceFixer::class => true,
+    OperatorLinebreakFixer::class => true,
+    StandardizeIncrementFixer::class => true,
+    StandardizeNotEqualsFixer::class => true,
+    TernaryOperatorSpacesFixer::class => true,
+    TernaryToElvisOperatorFixer::class => true,
+    TernaryToNullCoalescingFixer::class => true,
+    UnaryOperatorSpacesFixer::class => true,
+]);

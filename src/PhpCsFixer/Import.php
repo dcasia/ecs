@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
@@ -13,22 +13,15 @@ use PhpCsFixer\Fixer\Import\NoUnusedImportsFixer;
 use PhpCsFixer\Fixer\Import\OrderedImportsFixer;
 use PhpCsFixer\Fixer\Import\SingleImportPerStatementFixer;
 use PhpCsFixer\Fixer\Import\SingleLineAfterImportsFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        FullyQualifiedStrictTypesFixer::class => true,
-        GlobalNamespaceImportFixer::class => [ 'import_classes' => true, 'import_constants' => false, 'import_functions' => false ],
-        GroupImportFixer::class => false,
-        NoLeadingImportSlashFixer::class => true,
-        NoUnneededImportAliasFixer::class => true,
-        NoUnusedImportsFixer::class => true,
-        OrderedImportsFixer::class => true,
-        SingleImportPerStatementFixer::class => true,
-        SingleLineAfterImportsFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    FullyQualifiedStrictTypesFixer::class => true,
+    GlobalNamespaceImportFixer::class => [ 'import_classes' => true, 'import_constants' => false, 'import_functions' => false ],
+    GroupImportFixer::class => false,
+    NoLeadingImportSlashFixer::class => true,
+    NoUnneededImportAliasFixer::class => true,
+    NoUnusedImportsFixer::class => true,
+    OrderedImportsFixer::class => true,
+    SingleImportPerStatementFixer::class => true,
+    SingleLineAfterImportsFixer::class => true,
+]);

@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
@@ -12,21 +12,14 @@ use PhpCsFixer\Fixer\Basic\NonPrintableCharacterFixer;
 use PhpCsFixer\Fixer\Basic\NoTrailingCommaInSinglelineFixer;
 use PhpCsFixer\Fixer\Basic\OctalNotationFixer;
 use PhpCsFixer\Fixer\Basic\PsrAutoloadingFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        BracesFixer::class => false,
-        CurlyBracesPositionFixer::class => false,
-        EncodingFixer::class => true,
-        NoMultipleStatementsPerLineFixer::class => true,
-        NonPrintableCharacterFixer::class => true,
-        NoTrailingCommaInSinglelineFixer::class => true,
-        OctalNotationFixer::class => true,
-        PsrAutoloadingFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    BracesFixer::class => false,
+    CurlyBracesPositionFixer::class => false,
+    EncodingFixer::class => true,
+    NoMultipleStatementsPerLineFixer::class => true,
+    NonPrintableCharacterFixer::class => true,
+    NoTrailingCommaInSinglelineFixer::class => true,
+    OctalNotationFixer::class => true,
+    PsrAutoloadingFixer::class => true,
+]);

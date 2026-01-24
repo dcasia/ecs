@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
@@ -22,36 +22,29 @@ use PhpCsFixer\Fixer\ClassNotation\SelfStaticAccessorFixer;
 use PhpCsFixer\Fixer\ClassNotation\SingleClassElementPerStatementFixer;
 use PhpCsFixer\Fixer\ClassNotation\SingleTraitInsertPerStatementFixer;
 use PhpCsFixer\Fixer\ClassNotation\VisibilityRequiredFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        ClassAttributesSeparationFixer::class => false,
-        ClassDefinitionFixer::class => [
-            'multi_line_extends_each_single_line' => true,
-            'single_item_single_line' => true,
-            'single_line' => true,
-            'space_before_parenthesis' => true,
-        ],
-        FinalClassFixer::class => false,
-        FinalInternalClassFixer::class => false,
-        FinalPublicMethodForAbstractClassFixer::class => false,
-        NoBlankLinesAfterClassOpeningFixer::class => true,
-        NoNullPropertyInitializationFixer::class => false,
-        NoPhp4ConstructorFixer::class => true,
-        NoUnneededFinalMethodFixer::class => true,
-        OrderedClassElementsFixer::class => false,
-        OrderedInterfacesFixer::class => true,
-        OrderedTraitsFixer::class => true,
-        ProtectedToPrivateFixer::class => true,
-        SelfAccessorFixer::class => false,
-        SelfStaticAccessorFixer::class => true,
-        SingleClassElementPerStatementFixer::class => true,
-        SingleTraitInsertPerStatementFixer::class => false,
-        VisibilityRequiredFixer::class => [ 'elements' => [ 'method', 'property' ] ],
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    ClassAttributesSeparationFixer::class => false,
+    ClassDefinitionFixer::class => [
+        'multi_line_extends_each_single_line' => true,
+        'single_item_single_line' => true,
+        'single_line' => true,
+        'space_before_parenthesis' => true,
+    ],
+    FinalClassFixer::class => false,
+    FinalInternalClassFixer::class => false,
+    FinalPublicMethodForAbstractClassFixer::class => false,
+    NoBlankLinesAfterClassOpeningFixer::class => true,
+    NoNullPropertyInitializationFixer::class => false,
+    NoPhp4ConstructorFixer::class => true,
+    NoUnneededFinalMethodFixer::class => true,
+    OrderedClassElementsFixer::class => false,
+    OrderedInterfacesFixer::class => true,
+    OrderedTraitsFixer::class => true,
+    ProtectedToPrivateFixer::class => true,
+    SelfAccessorFixer::class => false,
+    SelfStaticAccessorFixer::class => true,
+    SingleClassElementPerStatementFixer::class => true,
+    SingleTraitInsertPerStatementFixer::class => false,
+    VisibilityRequiredFixer::class => [ 'elements' => [ 'method', 'property' ] ],
+]);

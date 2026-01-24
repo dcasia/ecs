@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\Fixers;
 
@@ -20,7 +20,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     {
         return new FixerDefinition(
             'This fixer improves on the readability of PSR-12 by adding a negative space between blocks (if/else/while etc..) making it clearer and easier to read and understand.',
-            []
+            [],
         );
     }
 
@@ -41,7 +41,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
      */
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        for ($index = 0, $count = $tokens->count(); $index < $count; ++$index) {
+        for ($index = 0, $count = $tokens->count(); $index < $count; $index++) {
 
             $token = $this->token($tokens, $index);
 
@@ -77,7 +77,6 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         if ($boundaries = $this->getBlockBoundaries($tokens, $start)) {
 
             /**
-             *
              * public function name()
              * {
              *   •
@@ -114,13 +113,13 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
          *   •
          * }
          */
-//        if ($this->token($tokens, $tokens->getNextMeaningfulToken($blockStartIndex))->isGivenKind(T_RETURN)) {
-//
-//            $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
-//
-//            return;
-//
-//        }
+        //        if ($this->token($tokens, $tokens->getNextMeaningfulToken($blockStartIndex))->isGivenKind(T_RETURN)) {
+        //
+        //            $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
+        //
+        //            return;
+        //
+        //        }
 
         /**
          * if/else/try/catch() {
@@ -236,8 +235,8 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         }
 
         $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding() .
-            $this->token($tokens, $index)->getContent()
+            $this->whitespacesConfig->getLineEnding()
+            . $this->token($tokens, $index)->getContent(),
         );
     }
 
@@ -251,8 +250,8 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         }
 
         $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding() .
-            $this->getIndent($tokens, $index)
+            $this->whitespacesConfig->getLineEnding()
+            . $this->getIndent($tokens, $index),
         );
     }
 
@@ -274,7 +273,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
         return str_repeat(
             string: $this->whitespacesConfig->getIndent(),
-            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ]))
+            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ])),
         );
     }
 

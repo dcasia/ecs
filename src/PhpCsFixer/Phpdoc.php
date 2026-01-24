@@ -1,9 +1,8 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
-
 
 use PhpCsFixer\Fixer\Phpdoc\AlignMultilineCommentFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
@@ -38,46 +37,39 @@ use PhpCsFixer\Fixer\Phpdoc\PhpdocTypesFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocTypesOrderFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocVarAnnotationCorrectOrderFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocVarWithoutNameFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
-
-    $options = [
-        AlignMultilineCommentFixer::class => [ 'comment_type' => 'all_multiline' ],
-        GeneralPhpdocAnnotationRemoveFixer::class => true,
-        GeneralPhpdocTagRenameFixer::class => true,
-        NoBlankLinesAfterPhpdocFixer::class => true,
-        NoEmptyPhpdocFixer::class => true,
-        NoSuperfluousPhpdocTagsFixer::class => true,
-        PhpdocAddMissingParamAnnotationFixer::class => false,
-        PhpdocAlignFixer::class => [ 'align' => 'left' ],
-        PhpdocAnnotationWithoutDotFixer::class => false,
-        PhpdocIndentFixer::class => true,
-        PhpdocInlineTagNormalizerFixer::class => true,
-        PhpdocLineSpanFixer::class => true,
-        PhpdocNoAccessFixer::class => true,
-        PhpdocNoAliasTagFixer::class => true,
-        PhpdocNoEmptyReturnFixer::class => true,
-        PhpdocNoPackageFixer::class => true,
-        PhpdocNoUselessInheritdocFixer::class => true,
-        PhpdocOrderByValueFixer::class => true,
-        PhpdocOrderFixer::class => true,
-        PhpdocReturnSelfReferenceFixer::class => false,
-        PhpdocScalarFixer::class => true,
-        PhpdocSeparationFixer::class => false,
-        PhpdocSingleLineVarSpacingFixer::class => true,
-        PhpdocSummaryFixer::class => false,
-        PhpdocTagCasingFixer::class => true,
-        PhpdocTagTypeFixer::class => true,
-        PhpdocToCommentFixer::class => false,
-        PhpdocTrimConsecutiveBlankLineSeparationFixer::class => true,
-        PhpdocTrimFixer::class => true,
-        PhpdocTypesFixer::class => true,
-        PhpdocTypesOrderFixer::class => [ 'null_adjustment' => 'always_last' ],
-        PhpdocVarAnnotationCorrectOrderFixer::class => true,
-        PhpdocVarWithoutNameFixer::class => true,
-    ];
-
-    register_fixers($config, $options);
-
-};
+return register_fixers([
+    AlignMultilineCommentFixer::class => [ 'comment_type' => 'all_multiline' ],
+    GeneralPhpdocAnnotationRemoveFixer::class => true,
+    GeneralPhpdocTagRenameFixer::class => true,
+    NoBlankLinesAfterPhpdocFixer::class => true,
+    NoEmptyPhpdocFixer::class => true,
+    NoSuperfluousPhpdocTagsFixer::class => true,
+    PhpdocAddMissingParamAnnotationFixer::class => false,
+    PhpdocAlignFixer::class => [ 'align' => 'left' ],
+    PhpdocAnnotationWithoutDotFixer::class => false,
+    PhpdocIndentFixer::class => true,
+    PhpdocInlineTagNormalizerFixer::class => true,
+    PhpdocLineSpanFixer::class => true,
+    PhpdocNoAccessFixer::class => true,
+    PhpdocNoAliasTagFixer::class => true,
+    PhpdocNoEmptyReturnFixer::class => true,
+    PhpdocNoPackageFixer::class => true,
+    PhpdocNoUselessInheritdocFixer::class => true,
+    PhpdocOrderByValueFixer::class => true,
+    PhpdocOrderFixer::class => true,
+    PhpdocReturnSelfReferenceFixer::class => false,
+    PhpdocScalarFixer::class => true,
+    PhpdocSeparationFixer::class => false,
+    PhpdocSingleLineVarSpacingFixer::class => true,
+    PhpdocSummaryFixer::class => false,
+    PhpdocTagCasingFixer::class => true,
+    PhpdocTagTypeFixer::class => true,
+    PhpdocToCommentFixer::class => false,
+    PhpdocTrimConsecutiveBlankLineSeparationFixer::class => true,
+    PhpdocTrimFixer::class => true,
+    PhpdocTypesFixer::class => true,
+    PhpdocTypesOrderFixer::class => [ 'null_adjustment' => 'always_last' ],
+    PhpdocVarAnnotationCorrectOrderFixer::class => true,
+    PhpdocVarWithoutNameFixer::class => true,
+]);

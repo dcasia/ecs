@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
@@ -27,37 +27,30 @@ use PhpCsFixer\Fixer\FunctionNotation\SingleLineThrowFixer;
 use PhpCsFixer\Fixer\FunctionNotation\StaticLambdaFixer;
 use PhpCsFixer\Fixer\FunctionNotation\UseArrowFunctionsFixer;
 use PhpCsFixer\Fixer\FunctionNotation\VoidReturnFixer;
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $config): void {
+return register_fixers([
+    CombineNestedDirnameFixer::class => true,
+    DateTimeCreateFromFormatCallFixer::class => true,
+    FopenFlagOrderFixer::class => true,
+    FopenFlagsFixer::class => true,
+    FunctionDeclarationFixer::class => true,
+    FunctionTypehintSpaceFixer::class => true,
+    ImplodeCallFixer::class => true,
+    LambdaNotUsedImportFixer::class => true,
+    MethodArgumentSpaceFixer::class => [ 'on_multiline' => 'ignore' ],
+    NativeFunctionInvocationFixer::class => false,
+    NoSpacesAfterFunctionNameFixer::class => true,
+    NoUnreachableDefaultArgumentValueFixer::class => true,
+    NoUselessSprintfFixer::class => true,
+    NullableTypeDeclarationForDefaultNullValueFixer::class => true,
+    PhpdocToParamTypeFixer::class => false,
+    PhpdocToPropertyTypeFixer::class => false,
+    PhpdocToReturnTypeFixer::class => false,
 
-    $options = [
-        CombineNestedDirnameFixer::class => true,
-        DateTimeCreateFromFormatCallFixer::class => true,
-        FopenFlagOrderFixer::class => true,
-        FopenFlagsFixer::class => true,
-        FunctionDeclarationFixer::class => true,
-        FunctionTypehintSpaceFixer::class => true,
-        ImplodeCallFixer::class => true,
-        LambdaNotUsedImportFixer::class => true,
-        MethodArgumentSpaceFixer::class => [ 'on_multiline' => 'ignore' ],
-        NativeFunctionInvocationFixer::class => false,
-        NoSpacesAfterFunctionNameFixer::class => true,
-        NoUnreachableDefaultArgumentValueFixer::class => true,
-        NoUselessSprintfFixer::class => true,
-        NullableTypeDeclarationForDefaultNullValueFixer::class => true,
-        PhpdocToParamTypeFixer::class => false,
-        PhpdocToPropertyTypeFixer::class => false,
-        PhpdocToReturnTypeFixer::class => false,
-
-        RegularCallableCallFixer::class => false,
-        ReturnTypeDeclarationFixer::class => true,
-        SingleLineThrowFixer::class => false,
-        StaticLambdaFixer::class => false,
-        UseArrowFunctionsFixer::class => false,
-        VoidReturnFixer::class => false,
-    ];
-
-    register_fixers($config, $options);
-
-};
+    RegularCallableCallFixer::class => false,
+    ReturnTypeDeclarationFixer::class => true,
+    SingleLineThrowFixer::class => false,
+    StaticLambdaFixer::class => false,
+    UseArrowFunctionsFixer::class => false,
+    VoidReturnFixer::class => false,
+]);
