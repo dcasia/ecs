@@ -40,7 +40,6 @@ return register_fixers([
         __DIR__ . '/config',
         __DIR__ . '/routes',
         __DIR__ . '/tests',
-        __DIR__ . '/ecs',
     ]);
 ```
 
