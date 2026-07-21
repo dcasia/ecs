@@ -13,9 +13,20 @@
             "helpers/functions.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "DigitalCreative\\ECS\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
     "config": {
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require-dev": {
+        "phpunit/phpunit": "^12.5.31"
+    }
 }

@@ -39,5 +39,5 @@ return register_fixers([
     SpacesInsideParenthesesFixer::class => true,
     StatementIndentationFixer::class => true,
     TypeDeclarationSpacesFixer::class => true,
-    TypesSpacesFixer::class => [ 'space' => 'none' ],
+    TypesSpacesFixer::class => [ 'space' => 'single' ],
 ]);
