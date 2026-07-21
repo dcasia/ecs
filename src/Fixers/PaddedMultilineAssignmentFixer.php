@@ -196,6 +196,24 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
     private function ensureBlankLineAfter(Tokens $tokens, int $end): void
     {
+        $next = $tokens->getNextNonWhitespace($end);
+
+        if ($next === null) {
+            return;
+        }
+
+        if ($tokens[ $next ]->equals('}')) {
+
+            $openBracket = $tokens->findBlockStart(Tokens::BLOCK_TYPE_BRACE, $next);
+
+            if ($this->isFunctionOpeningBracket($tokens, $openBracket)) {
+                $this->normalizeBoundaryWhitespace($tokens, $end + 1);
+            }
+
+            return;
+
+        }
+
         $whitespace = $end + 1;
 
         if ($whitespace >= $tokens->count()) {
@@ -227,6 +245,22 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
     private function ensureBlankLineBefore(Tokens $tokens, int $start): void
     {
+        $previous = $tokens->getPrevNonWhitespace($start);
+
+        if ($previous === null) {
+            return;
+        }
+
+        if ($tokens[ $previous ]->equals('{')) {
+
+            if ($this->isFunctionOpeningBracket($tokens, $previous)) {
+                $this->normalizeBoundaryWhitespace($tokens, $start - 1);
+            }
+
+            return;
+
+        }
+
         $whitespace = $start - 1;
 
         if ($whitespace < 0) {
@@ -254,6 +288,44 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
         }
 
         $tokens[ $whitespace ] = new Token([ T_WHITESPACE, $content ]);
+    }
+
+    private function isFunctionOpeningBracket(Tokens $tokens, int $openBracket): bool
+    {
+        for ($index = $openBracket - 1; $index >= 0; $index--) {
+
+            if ($tokens[ $index ]->isGivenKind(T_FUNCTION)) {
+                return true;
+            }
+
+            if ($tokens[ $index ]->equalsAny([ ';', '{', '}' ])) {
+                return false;
+            }
+
+        }
+
+        return false;
+    }
+
+    private function normalizeBoundaryWhitespace(Tokens $tokens, int $whitespace): void
+    {
+        if (
+            $whitespace < 0
+            || $whitespace >= $tokens->count()
+            || !$tokens[ $whitespace ]->isWhitespace()
+        ) {
+            return;
+        }
+
+        $content = preg_replace(
+            pattern: '~(?:\r\n|\r|\n)+~',
+            replacement: $this->lineEnding(),
+            subject: $tokens[ $whitespace ]->getContent(),
+        );
+
+        if ($content !== null) {
+            $tokens[ $whitespace ] = new Token([ T_WHITESPACE, $content ]);
+        }
     }
 
     private function lineEnding(): string

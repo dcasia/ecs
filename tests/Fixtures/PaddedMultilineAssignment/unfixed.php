@@ -24,9 +24,11 @@ final class MultilineAssignmentFixture
 
     public function createOneLead(): void
     {
+
         $assigned = LeadFactory::new()->create([
             'name' => 'Assigned',
             'retailer_id' => $retailerA->id,
         ]);
+
     }
 }

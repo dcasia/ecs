@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace DigitalCreative\ECS;
 
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
+use DigitalCreative\ECS\Fixers\CompactFunctionParametersFixer;
 use DigitalCreative\ECS\Fixers\FunctionOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
@@ -19,6 +20,7 @@ return register_fixers([
     PaddedBlockFixer::class => true,
     PaddedMultilineAssignmentFixer::class => true,
     ClassOpeningBracketFixer::class => true,
+    CompactFunctionParametersFixer::class => true,
     FunctionOpeningBracketFixer::class => true,
     LaravelEmptyToBlankFixer::class => true,
     RequireNamedArgumentsForMultilineCallsSniff::class => true,

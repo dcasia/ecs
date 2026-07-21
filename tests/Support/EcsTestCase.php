@@ -19,11 +19,7 @@ abstract class EcsTestCase extends TestCase
         self::assertSame($this->readFixture($expectedFixture), $result[ 'source' ]);
     }
 
-    final protected function assertFixtureIsFixedToUsingConfig(
-        string $inputFixture,
-        string $expectedFixture,
-        string $config,
-    ): void
+    final protected function assertFixtureIsFixedToUsingConfig(string $inputFixture, string $expectedFixture, string $config): void
     {
         $result = $this->runEcs($this->readFixture($inputFixture), true, $config);
 
@@ -55,13 +51,8 @@ abstract class EcsTestCase extends TestCase
         self::assertSame($source, $result[ 'source' ]);
     }
 
-    final protected function assertFixtureFailsWithUsingConfig(
-        string $fixture,
-        array $messages,
-        string $config,
-    ): void
+    final protected function assertFixtureFailsWithUsingConfig(string $fixture, array $messages, string $config): void
     {
-
         $result = $this->runEcs(
             source: $this->readFixture($fixture),
             fix: false,
@@ -108,7 +99,6 @@ abstract class EcsTestCase extends TestCase
         ?string $filename = null,
     ): array
     {
-
         $path = sys_get_temp_dir()
         . '/digital-creative-ecs-'
         . bin2hex(random_bytes(8))

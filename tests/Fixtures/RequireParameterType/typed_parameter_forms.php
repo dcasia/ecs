@@ -16,7 +16,6 @@ final class ParameterTypesFixture
 
     public function typedMethod(int &$methodParameter): void
     {
-
         $closure = function (object $closureParameter): void {
         };
 
