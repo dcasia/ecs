@@ -17,12 +17,9 @@ final class PaddedArrayFixer extends AbstractFixer
 {
     public function getDefinition(): FixerDefinitionInterface
     {
-        return new FixerDefinition(
-            'Arrays should always have a space between start and ending brackets.',
-            [
-                new CodeSample("<?php\n\$sample = [ 1,2,3 ];"),
-            ],
-        );
+        return new FixerDefinition(summary: 'Arrays should always have a space between start and ending brackets.', codeSamples: [
+            new CodeSample("<?php\n\$sample = [ 1,2,3 ];"),
+        ]);
     }
 
     public function isCandidate(Tokens $tokens): bool

@@ -16,10 +16,7 @@ final class ClassOpeningBracketFixer extends AbstractFixer implements Whitespace
 {
     public function getDefinition(): FixerDefinitionInterface
     {
-        return new FixerDefinition(
-            'There must be no blank lines between {} within interfaces / traits / classes',
-            [],
-        );
+        return new FixerDefinition(summary: 'There must be no blank lines between {} within interfaces / traits / classes', codeSamples: []);
     }
 
     public function isCandidate(Tokens $tokens): bool

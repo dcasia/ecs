@@ -15,7 +15,7 @@ use PhpCsFixer\Fixer\Import\SingleImportPerStatementFixer;
 use PhpCsFixer\Fixer\Import\SingleLineAfterImportsFixer;
 
 return register_fixers([
-    FullyQualifiedStrictTypesFixer::class => true,
+    FullyQualifiedStrictTypesFixer::class => [ 'import_symbols' => true ],
     GlobalNamespaceImportFixer::class => [ 'import_classes' => true, 'import_constants' => false, 'import_functions' => false ],
     GroupImportFixer::class => false,
     NoLeadingImportSlashFixer::class => true,

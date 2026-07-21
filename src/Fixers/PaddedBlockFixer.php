@@ -18,10 +18,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 {
     public function getDefinition(): FixerDefinitionInterface
     {
-        return new FixerDefinition(
-            'This fixer improves on the readability of PSR-12 by adding a negative space between blocks (if/else/while etc..) making it clearer and easier to read and understand.',
-            [],
-        );
+        return new FixerDefinition(summary: 'This fixer improves on the readability of PSR-12 by adding a negative space between blocks (if/else/while etc..) making it clearer and easier to read and understand.', codeSamples: []);
     }
 
     public function isCandidate(Tokens $tokens): bool

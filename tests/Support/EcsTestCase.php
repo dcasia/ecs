@@ -19,6 +19,17 @@ abstract class EcsTestCase extends TestCase
         self::assertSame($this->readFixture($expectedFixture), $result[ 'source' ]);
     }
 
+    final protected function assertFixtureIsFixedToUsingConfig(
+        string $inputFixture,
+        string $expectedFixture,
+        string $config,
+    ): void {
+        $result = $this->runEcs($this->readFixture($inputFixture), true, $config);
+
+        self::assertSame(0, $result[ 'exitCode' ], $result[ 'output' ]);
+        self::assertSame($this->readFixture($expectedFixture), $result[ 'source' ]);
+    }
+
     final protected function assertFixturePasses(string $fixture): void
     {
         $source = $this->readFixture($fixture);
@@ -28,7 +39,7 @@ abstract class EcsTestCase extends TestCase
         self::assertSame($source, $result[ 'source' ]);
     }
 
-    final protected function assertFixtureFailsWith(string $fixture, string ...$messages): void
+    final protected function assertFixtureFailsWith(string $fixture, array $messages): void
     {
         $result = $this->runEcs($this->readFixture($fixture), false);
 
@@ -53,8 +64,11 @@ abstract class EcsTestCase extends TestCase
     /**
      * @return array{exitCode: int, output: string, source: string}
      */
-    private function runEcs(string $source, bool $fix): array
-    {
+    private function runEcs(
+        string $source,
+        bool $fix,
+        string $config = self::PROJECT_ROOT . '/src/Custom.php',
+    ): array {
         $path = sys_get_temp_dir() . '/digital-creative-ecs-' . bin2hex(random_bytes(8)) . '.php';
 
         if (file_put_contents($path, $source) === false) {
@@ -67,7 +81,7 @@ abstract class EcsTestCase extends TestCase
             'check',
             $path,
             '--config',
-            self::PROJECT_ROOT . '/src/Custom.php',
+            $config,
             '--no-progress-bar',
         ];
 
@@ -77,13 +91,13 @@ abstract class EcsTestCase extends TestCase
 
         $pipes = [];
         $process = proc_open(
-            $command,
-            [
+            command: $command,
+            descriptor_spec: [
                 1 => [ 'pipe', 'w' ],
                 2 => [ 'pipe', 'w' ],
             ],
-            $pipes,
-            self::PROJECT_ROOT,
+            pipes: $pipes,
+            cwd: self::PROJECT_ROOT,
         );
 
         if (!is_resource($process)) {

@@ -16,10 +16,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
 {
     public function getDefinition(): FixerDefinitionInterface
     {
-        return new FixerDefinition(
-            'Chaining multiple methods should follow a consistent rule: either break everything in a new line, or keep everything in the same line.',
-            [],
-        );
+        return new FixerDefinition(summary: 'Chaining multiple methods should follow a consistent rule: either break everything in a new line, or keep everything in the same line.', codeSamples: []);
     }
 
     public function isCandidate(Tokens $tokens): bool
