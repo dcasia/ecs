@@ -13,12 +13,12 @@ use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use SplFileInfo;
 
-final class PaddedMultilineAssignmentFixer extends AbstractFixer implements WhitespacesAwareFixerInterface
+final class PaddedMultilineStatementFixer extends AbstractFixer implements WhitespacesAwareFixerInterface
 {
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Multiline variable assignments must be surrounded by blank lines.',
+            summary: 'Multiline assignments and standalone method chains must be surrounded by blank lines.',
             codeSamples: [
                 new CodeSample("<?php\n\n\$assigned = LeadFactory::new()->create([\n    'name' => 'Assigned',\n]);\n\$shared = LeadFactory::new()->create([\n    'name' => 'Shared',\n]);\n"),
             ],
@@ -32,19 +32,26 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isTokenKindFound('=');
+        return $tokens->isAnyTokenKindsFound([ '=', T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]);
     }
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        $assignments = $this->findMultilineAssignments($tokens);
+        $statements = [];
 
-        for ($index = count($assignments) - 1; $index >= 0; $index--) {
+        foreach ([ ...$this->findMultilineAssignments($tokens), ...$this->findMultilineMethodChains($tokens) ] as $statement) {
+            $statements[ $statement[ 'start' ] . ':' . $statement[ 'end' ] ] = $statement;
+        }
 
-            $assignment = $assignments[ $index ];
+        $statements = array_values($statements);
+        usort($statements, static fn (array $left, array $right): int => $left[ 'start' ] <=> $right[ 'start' ]);
 
-            $this->ensureBlankLineAfter($tokens, $assignment[ 'end' ]);
-            $this->ensureBlankLineBefore($tokens, $assignment[ 'start' ]);
+        for ($index = count($statements) - 1; $index >= 0; $index--) {
+
+            $statement = $statements[ $index ];
+
+            $this->ensureBlankLineAfter($tokens, $statement[ 'end' ]);
+            $this->ensureBlankLineBefore($tokens, $statement[ 'start' ]);
 
         }
     }
@@ -107,6 +114,109 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
         }
 
         return $assignments;
+    }
+
+    /**
+     * @return list<array{start: int, end: int}>
+     */
+    private function findMultilineMethodChains(Tokens $tokens): array
+    {
+        $chains = [];
+
+        for ($index = 1, $count = $tokens->count(); $index < $count; $index++) {
+
+            if (!$tokens[ $index ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ])) {
+                continue;
+            }
+
+            $whitespace = $index - 1;
+
+            if (
+                !$tokens[ $whitespace ]->isWhitespace()
+                || !str_contains($tokens[ $whitespace ]->getContent(), "\n")
+            ) {
+                continue;
+            }
+
+            $start = $this->findRootStatementStart($tokens, $index);
+            $end = $this->findStatementEnd($tokens, $index);
+
+            if ($start === null || $end === null) {
+                continue;
+            }
+
+            $chains[] = [
+                'start' => $start,
+                'end' => $this->findEndIncludingTrailingComment($tokens, $end),
+            ];
+
+            $index = $end;
+
+        }
+
+        return $chains;
+    }
+
+    private function findRootStatementStart(Tokens $tokens, int $operator): ?int
+    {
+        for ($index = $operator - 1; $index >= 0; $index--) {
+
+            $token = $tokens[ $index ];
+
+            if ($token->equals(':')) {
+                return null;
+            }
+
+            if ($token->equalsAny([ ';', '{', '}' ])) {
+
+                $start = $tokens->getNextMeaningfulToken($index);
+
+                return $start === null ? null : $this->findStartIncludingComments($tokens, $start);
+
+            }
+
+            $block = Tokens::detectBlockType($token);
+
+            if ($block === null) {
+                continue;
+            }
+
+            if ($block[ 'isStart' ]) {
+                return null;
+            }
+
+            $index = $tokens->findBlockStart($block[ 'type' ], $index);
+
+        }
+
+        return null;
+    }
+
+    private function findStatementEnd(Tokens $tokens, int $operator): ?int
+    {
+        for ($index = $operator + 1, $count = $tokens->count(); $index < $count; $index++) {
+
+            $token = $tokens[ $index ];
+
+            if ($token->equals(';')) {
+                return $index;
+            }
+
+            $block = Tokens::detectBlockType($token);
+
+            if ($block === null) {
+                continue;
+            }
+
+            if (!$block[ 'isStart' ]) {
+                return null;
+            }
+
+            $index = $tokens->findBlockEnd($block[ 'type' ], $index);
+
+        }
+
+        return null;
     }
 
     private function findAssignmentEnd(Tokens $tokens, int $start): ?int
@@ -206,7 +316,7 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
             $openBracket = $tokens->findBlockStart(Tokens::BLOCK_TYPE_BRACE, $next);
 
-            if ($this->isFunctionOpeningBracket($tokens, $openBracket)) {
+            if ($this->isNamedFunctionOpeningBracket($tokens, $openBracket)) {
                 $this->normalizeBoundaryWhitespace($tokens, $end + 1);
             }
 
@@ -253,7 +363,7 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
         if ($tokens[ $previous ]->equals('{')) {
 
-            if ($this->isFunctionOpeningBracket($tokens, $previous)) {
+            if ($this->isNamedFunctionOpeningBracket($tokens, $previous)) {
                 $this->normalizeBoundaryWhitespace($tokens, $start - 1);
             }
 
@@ -290,12 +400,20 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
         $tokens[ $whitespace ] = new Token([ T_WHITESPACE, $content ]);
     }
 
-    private function isFunctionOpeningBracket(Tokens $tokens, int $openBracket): bool
+    private function isNamedFunctionOpeningBracket(Tokens $tokens, int $openBracket): bool
     {
         for ($index = $openBracket - 1; $index >= 0; $index--) {
 
             if ($tokens[ $index ]->isGivenKind(T_FUNCTION)) {
-                return true;
+
+                $name = $tokens->getNextMeaningfulToken($index);
+
+                if ($name !== null && $tokens[ $name ]->equals('&')) {
+                    $name = $tokens->getNextMeaningfulToken($name);
+                }
+
+                return $name !== null && $tokens[ $name ]->isGivenKind(T_STRING);
+
             }
 
             if ($tokens[ $index ]->equalsAny([ ';', '{', '}' ])) {

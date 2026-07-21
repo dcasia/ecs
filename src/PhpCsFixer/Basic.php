@@ -19,7 +19,7 @@ return register_fixers([
     EncodingFixer::class => true,
     NoMultipleStatementsPerLineFixer::class => true,
     NonPrintableCharacterFixer::class => true,
-    NoTrailingCommaInSinglelineFixer::class => true,
+    NoTrailingCommaInSinglelineFixer::class => [ 'elements' => [ 'arguments', 'array_destructuring', 'group_import' ] ],
     NumericLiteralSeparatorFixer::class => true,
     OctalNotationFixer::class => true,
     PsrAutoloadingFixer::class => true,
