@@ -14,6 +14,7 @@ return register_fixers([
     ClassOpeningBracketFixer::class => true,
 ])->withSets([
     __DIR__ . '/PhpCsFixer/Alias.php',
+    __DIR__ . '/PhpCsFixer/AttributeNotation.php',
     __DIR__ . '/PhpCsFixer/ArrayNotation.php',
     __DIR__ . '/PhpCsFixer/Basic.php',
     __DIR__ . '/PhpCsFixer/Casing.php',

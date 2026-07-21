@@ -9,7 +9,9 @@ use PhpCsFixer\Fixer\Operator\BinaryOperatorSpacesFixer;
 use PhpCsFixer\Fixer\Operator\ConcatSpaceFixer;
 use PhpCsFixer\Fixer\Operator\IncrementStyleFixer;
 use PhpCsFixer\Fixer\Operator\LogicalOperatorsFixer;
-use PhpCsFixer\Fixer\Operator\NewWithBracesFixer;
+use PhpCsFixer\Fixer\Operator\LongToShorthandOperatorFixer;
+use PhpCsFixer\Fixer\Operator\NewExpressionParenthesesFixer;
+use PhpCsFixer\Fixer\Operator\NewWithParenthesesFixer;
 use PhpCsFixer\Fixer\Operator\NoSpaceAroundDoubleColonFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSpaceFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSuccessorSpaceFixer;
@@ -30,7 +32,9 @@ return register_fixers([
     ConcatSpaceFixer::class => [ 'spacing' => 'one' ],
     IncrementStyleFixer::class => [ 'style' => 'post' ],
     LogicalOperatorsFixer::class => true,
-    NewWithBracesFixer::class => true,
+    LongToShorthandOperatorFixer::class => true,
+    NewExpressionParenthesesFixer::class => true,
+    NewWithParenthesesFixer::class => true,
     NoSpaceAroundDoubleColonFixer::class => true,
     NotOperatorWithSpaceFixer::class => false,
     NotOperatorWithSuccessorSpaceFixer::class => false,

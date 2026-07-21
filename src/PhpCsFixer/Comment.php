@@ -9,6 +9,7 @@ use PhpCsFixer\Fixer\Comment\HeaderCommentFixer;
 use PhpCsFixer\Fixer\Comment\MultilineCommentOpeningClosingFixer;
 use PhpCsFixer\Fixer\Comment\NoEmptyCommentFixer;
 use PhpCsFixer\Fixer\Comment\NoTrailingWhitespaceInCommentFixer;
+use PhpCsFixer\Fixer\Comment\SingleLineCommentSpacingFixer;
 use PhpCsFixer\Fixer\Comment\SingleLineCommentStyleFixer;
 
 return register_fixers([
@@ -17,5 +18,6 @@ return register_fixers([
     MultilineCommentOpeningClosingFixer::class => true,
     NoEmptyCommentFixer::class => true,
     NoTrailingWhitespaceInCommentFixer::class => true,
+    SingleLineCommentSpacingFixer::class => true,
     SingleLineCommentStyleFixer::class => true,
 ]);

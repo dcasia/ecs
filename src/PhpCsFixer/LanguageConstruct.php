@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace DigitalCreative\ECS\PhpCsFixer;
 
+use PhpCsFixer\Fixer\LanguageConstruct\ClassKeywordFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\CombineConsecutiveIssetsFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\CombineConsecutiveUnsetsFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\DeclareEqualNormalizeFixer;
@@ -15,9 +16,11 @@ use PhpCsFixer\Fixer\LanguageConstruct\FunctionToConstantFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\GetClassToClassKeywordFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\IsNullFixer;
 use PhpCsFixer\Fixer\LanguageConstruct\NoUnsetOnPropertyFixer;
-use PhpCsFixer\Fixer\LanguageConstruct\SingleSpaceAfterConstructFixer;
+use PhpCsFixer\Fixer\LanguageConstruct\NullableTypeDeclarationFixer;
+use PhpCsFixer\Fixer\LanguageConstruct\SingleSpaceAroundConstructFixer;
 
 return register_fixers([
+    ClassKeywordFixer::class => true,
     CombineConsecutiveIssetsFixer::class => true,
     CombineConsecutiveUnsetsFixer::class => true,
     DeclareEqualNormalizeFixer::class => [ 'space' => 'single' ],
@@ -29,5 +32,6 @@ return register_fixers([
     GetClassToClassKeywordFixer::class => true,
     IsNullFixer::class => false,
     NoUnsetOnPropertyFixer::class => true,
-    SingleSpaceAfterConstructFixer::class => true,
+    NullableTypeDeclarationFixer::class => true,
+    SingleSpaceAroundConstructFixer::class => true,
 ]);

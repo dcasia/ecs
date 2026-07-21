@@ -29,7 +29,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
 
     public function getPriority(): int
     {
-        return 1000;
+        return 1_000;
     }
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void

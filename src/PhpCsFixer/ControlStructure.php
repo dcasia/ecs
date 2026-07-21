@@ -13,9 +13,8 @@ use PhpCsFixer\Fixer\ControlStructure\IncludeFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoAlternativeSyntaxFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoBreakCommentFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoSuperfluousElseifFixer;
-use PhpCsFixer\Fixer\ControlStructure\NoTrailingCommaInListCallFixer;
+use PhpCsFixer\Fixer\ControlStructure\NoUnneededBracesFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoUnneededControlParenthesesFixer;
-use PhpCsFixer\Fixer\ControlStructure\NoUnneededCurlyBracesFixer;
 use PhpCsFixer\Fixer\ControlStructure\NoUselessElseFixer;
 use PhpCsFixer\Fixer\ControlStructure\SimplifiedIfReturnFixer;
 use PhpCsFixer\Fixer\ControlStructure\SwitchCaseSemicolonToColonFixer;
@@ -34,9 +33,8 @@ return register_fixers([
     NoAlternativeSyntaxFixer::class => true,
     NoBreakCommentFixer::class => false,
     NoSuperfluousElseifFixer::class => true,
-    //        NoTrailingCommaInListCallFixer::class => true,
+    NoUnneededBracesFixer::class => true,
     NoUnneededControlParenthesesFixer::class => true,
-    NoUnneededCurlyBracesFixer::class => true,
     NoUselessElseFixer::class => true,
     SimplifiedIfReturnFixer::class => false,
     SwitchCaseSemicolonToColonFixer::class => true,

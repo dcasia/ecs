@@ -9,13 +9,14 @@ use PhpCsFixer\Fixer\FunctionNotation\DateTimeCreateFromFormatCallFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FopenFlagOrderFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FopenFlagsFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FunctionDeclarationFixer;
-use PhpCsFixer\Fixer\FunctionNotation\FunctionTypehintSpaceFixer;
 use PhpCsFixer\Fixer\FunctionNotation\ImplodeCallFixer;
 use PhpCsFixer\Fixer\FunctionNotation\LambdaNotUsedImportFixer;
 use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
+use PhpCsFixer\Fixer\FunctionNotation\MultilinePromotedPropertiesFixer;
 use PhpCsFixer\Fixer\FunctionNotation\NativeFunctionInvocationFixer;
 use PhpCsFixer\Fixer\FunctionNotation\NoSpacesAfterFunctionNameFixer;
 use PhpCsFixer\Fixer\FunctionNotation\NoUnreachableDefaultArgumentValueFixer;
+use PhpCsFixer\Fixer\FunctionNotation\NoUselessPrintfFixer;
 use PhpCsFixer\Fixer\FunctionNotation\NoUselessSprintfFixer;
 use PhpCsFixer\Fixer\FunctionNotation\NullableTypeDeclarationForDefaultNullValueFixer;
 use PhpCsFixer\Fixer\FunctionNotation\PhpdocToParamTypeFixer;
@@ -34,13 +35,14 @@ return register_fixers([
     FopenFlagOrderFixer::class => true,
     FopenFlagsFixer::class => true,
     FunctionDeclarationFixer::class => true,
-    FunctionTypehintSpaceFixer::class => true,
     ImplodeCallFixer::class => true,
     LambdaNotUsedImportFixer::class => true,
     MethodArgumentSpaceFixer::class => [ 'on_multiline' => 'ignore' ],
+    MultilinePromotedPropertiesFixer::class => true,
     NativeFunctionInvocationFixer::class => false,
     NoSpacesAfterFunctionNameFixer::class => true,
     NoUnreachableDefaultArgumentValueFixer::class => true,
+    NoUselessPrintfFixer::class => true,
     NoUselessSprintfFixer::class => true,
     NullableTypeDeclarationForDefaultNullValueFixer::class => true,
     PhpdocToParamTypeFixer::class => false,
