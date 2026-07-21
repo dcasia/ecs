@@ -5,18 +5,24 @@ declare(strict_types = 1);
 namespace DigitalCreative\ECS;
 
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
+use DigitalCreative\ECS\Fixers\FunctionOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
+use DigitalCreative\ECS\Fixers\PaddedMultilineAssignmentFixer;
 use DigitalCreative\ECS\Sniffs\RequireNamedArgumentsForMultilineCallsSniff;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
+use DigitalCreative\ECS\Sniffs\RequireRepositoryForDatabaseOperationsSniff;
 
 return register_fixers([
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
+    PaddedMultilineAssignmentFixer::class => true,
     ClassOpeningBracketFixer::class => true,
+    FunctionOpeningBracketFixer::class => true,
     LaravelEmptyToBlankFixer::class => true,
     RequireNamedArgumentsForMultilineCallsSniff::class => true,
+    RequireRepositoryForDatabaseOperationsSniff::class => true,
     RequireParameterTypeSniff::class => true,
 ])->withSets([
     __DIR__ . '/PhpCsFixer/Alias.php',

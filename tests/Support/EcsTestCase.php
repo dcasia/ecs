@@ -23,7 +23,8 @@ abstract class EcsTestCase extends TestCase
         string $inputFixture,
         string $expectedFixture,
         string $config,
-    ): void {
+    ): void
+    {
         $result = $this->runEcs($this->readFixture($inputFixture), true, $config);
 
         self::assertSame(0, $result[ 'exitCode' ], $result[ 'output' ]);
@@ -37,6 +38,42 @@ abstract class EcsTestCase extends TestCase
 
         self::assertSame(0, $result[ 'exitCode' ], $result[ 'output' ]);
         self::assertSame($source, $result[ 'source' ]);
+    }
+
+    final protected function assertFixturePassesUsingConfig(string $fixture, string $config): void
+    {
+        $source = $this->readFixture($fixture);
+
+        $result = $this->runEcs(
+            source: $source,
+            fix: false,
+            config: $config,
+            filename: basename($fixture),
+        );
+
+        self::assertSame(0, $result[ 'exitCode' ], $result[ 'output' ]);
+        self::assertSame($source, $result[ 'source' ]);
+    }
+
+    final protected function assertFixtureFailsWithUsingConfig(
+        string $fixture,
+        array $messages,
+        string $config,
+    ): void
+    {
+
+        $result = $this->runEcs(
+            source: $this->readFixture($fixture),
+            fix: false,
+            config: $config,
+            filename: basename($fixture),
+        );
+
+        self::assertSame(2, $result[ 'exitCode' ], $result[ 'output' ]);
+
+        foreach ($messages as $message) {
+            self::assertStringContainsString($message, $result[ 'output' ]);
+        }
     }
 
     final protected function assertFixtureFailsWith(string $fixture, array $messages): void
@@ -68,8 +105,15 @@ abstract class EcsTestCase extends TestCase
         string $source,
         bool $fix,
         string $config = self::PROJECT_ROOT . '/src/Custom.php',
-    ): array {
-        $path = sys_get_temp_dir() . '/digital-creative-ecs-' . bin2hex(random_bytes(8)) . '.php';
+        ?string $filename = null,
+    ): array
+    {
+
+        $path = sys_get_temp_dir()
+        . '/digital-creative-ecs-'
+        . bin2hex(random_bytes(8))
+        . '-'
+        . ($filename ?? 'fixture.php');
 
         if (file_put_contents($path, $source) === false) {
             throw new RuntimeException("Unable to write ECS fixture: {$path}");
@@ -90,6 +134,7 @@ abstract class EcsTestCase extends TestCase
         }
 
         $pipes = [];
+
         $process = proc_open(
             command: $command,
             descriptor_spec: [

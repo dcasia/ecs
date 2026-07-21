@@ -235,6 +235,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
             $this->whitespacesConfig->getLineEnding()
             . $this->token($tokens, $index)->getContent(),
         );
+
     }
 
     /**
@@ -250,6 +251,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
             $this->whitespacesConfig->getLineEnding()
             . $this->getIndent($tokens, $index),
         );
+
     }
 
     private function getIndent(Tokens $tokens, int $index): string

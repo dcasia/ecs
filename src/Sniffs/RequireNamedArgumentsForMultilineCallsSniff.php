@@ -72,7 +72,10 @@ final class RequireNamedArgumentsForMultilineCallsSniff implements Sniff
 
         }
 
-        if (count($arguments) < 2) {
+        if (
+            count($arguments) < 2
+            || $tokens[ $arguments[ 0 ] ][ 'line' ] === $tokens[ $openParenthesis ][ 'line' ]
+        ) {
             return;
         }
 

@@ -30,7 +30,7 @@ use PhpCsFixer\Fixer\ClassNotation\StaticPrivateMethodFixer;
 use PhpCsFixer\Fixer\ClassNotation\StringableForToStringFixer;
 
 return register_fixers([
-    ClassAttributesSeparationFixer::class => false,
+    ClassAttributesSeparationFixer::class => [ 'elements' => [ 'method' => 'one' ] ],
     ClassDefinitionFixer::class => [
         'multi_line_extends_each_single_line' => true,
         'single_item_single_line' => true,

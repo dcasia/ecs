@@ -47,6 +47,11 @@ final class RequireNamedArgumentsForMultilineCallsSniffTest extends EcsTestCase
         $this->assertFixturePasses(__DIR__ . '/../Fixtures/RequireNamedArgumentsForMultilineCalls/single_array_argument.php');
     }
 
+    public function test_accepts_multiline_call_when_first_argument_starts_on_opening_line(): void
+    {
+        $this->assertFixturePasses(__DIR__ . '/../Fixtures/RequireNamedArgumentsForMultilineCalls/inline_first_argument_multiline_call.php');
+    }
+
     public function test_accepts_named_arguments_in_multiline_method_call(): void
     {
         $this->assertFixturePasses(__DIR__ . '/../Fixtures/RequireNamedArgumentsForMultilineCalls/named_method_call.php');
