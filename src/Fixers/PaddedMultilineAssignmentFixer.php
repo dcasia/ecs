@@ -222,7 +222,7 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
         if (!$tokens[ $whitespace ]->isWhitespace()) {
 
-            $tokens->insertAt($whitespace, new Token([ T_WHITESPACE, $this->lineEnding() . $this->lineEnding() ]));
+            $tokens->insertAt($whitespace, new Token([ T_WHITESPACE, str_repeat($this->lineEnding(), 2) ]));
 
             return;
 
@@ -232,11 +232,11 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
         if (substr_count($content, "\n") === 0) {
 
-            $content = rtrim($content, " \t") . $this->lineEnding() . $this->lineEnding();
+            $content = sprintf('%s%s', rtrim($content, " \t"), str_repeat($this->lineEnding(), 2));
 
         } else if (substr_count($content, "\n") === 1) {
 
-            $content = $this->lineEnding() . $content;
+            $content = sprintf('%s%s', $this->lineEnding(), $content);
 
         }
 
@@ -269,7 +269,7 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
         if (!$tokens[ $whitespace ]->isWhitespace()) {
 
-            $tokens->insertAt($start, new Token([ T_WHITESPACE, $this->lineEnding() . $this->lineEnding() ]));
+            $tokens->insertAt($start, new Token([ T_WHITESPACE, str_repeat($this->lineEnding(), 2) ]));
 
             return;
 
@@ -279,11 +279,11 @@ final class PaddedMultilineAssignmentFixer extends AbstractFixer implements Whit
 
         if (substr_count($content, "\n") === 0) {
 
-            $content = $this->lineEnding() . $this->lineEnding() . $content;
+            $content = sprintf('%s%s', str_repeat($this->lineEnding(), 2), $content);
 
         } else if (substr_count($content, "\n") === 1) {
 
-            $content = $this->lineEnding() . $content;
+            $content = sprintf('%s%s', $this->lineEnding(), $content);
 
         }
 

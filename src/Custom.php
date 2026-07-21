@@ -18,6 +18,7 @@ use DigitalCreative\ECS\Sniffs\RequireNamedArgumentsForMultilineCallsSniff;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
 use DigitalCreative\ECS\Sniffs\RequireRepositoryForDatabaseOperationsSniff;
 use DigitalCreative\ECS\Sniffs\RequireShallowMethodChainsSniff;
+use DigitalCreative\ECS\Sniffs\RequireSprintfForConcatenationSniff;
 
 return register_fixers([
     PaddedArrayFixer::class => true,
@@ -32,6 +33,7 @@ return register_fixers([
     MethodChainFixer::class => true,
     RequireNamedArgumentsForMultilineCallsSniff::class => true,
     RequireShallowMethodChainsSniff::class => true,
+    RequireSprintfForConcatenationSniff::class => true,
     RequireRepositoryForDatabaseOperationsSniff::class => true,
     RequireParameterTypeSniff::class => true,
 ])

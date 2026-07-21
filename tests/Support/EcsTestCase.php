@@ -95,15 +95,17 @@ abstract class EcsTestCase extends TestCase
     private function runEcs(
         string $source,
         bool $fix,
-        string $config = self::PROJECT_ROOT . '/src/Custom.php',
+        ?string $config = null,
         ?string $filename = null,
     ): array
     {
-        $path = sys_get_temp_dir()
-        . '/digital-creative-ecs-'
-        . bin2hex(random_bytes(8))
-        . '-'
-        . ($filename ?? 'fixture.php');
+        $config ??= sprintf('%s/src/Custom.php', self::PROJECT_ROOT);
+
+        $path = sprintf('%s/digital-creative-ecs-%s-%s',
+            sys_get_temp_dir(),
+            bin2hex(random_bytes(8)),
+            $filename ?? 'fixture.php',
+        );
 
         if (file_put_contents($path, $source) === false) {
             throw new RuntimeException("Unable to write ECS fixture: {$path}");
@@ -111,7 +113,7 @@ abstract class EcsTestCase extends TestCase
 
         $command = [
             PHP_BINARY,
-            self::PROJECT_ROOT . '/vendor/bin/ecs',
+            sprintf('%s/vendor/bin/ecs', self::PROJECT_ROOT),
             'check',
             $path,
             '--config',
@@ -145,7 +147,7 @@ abstract class EcsTestCase extends TestCase
 
         try {
 
-            $output = stream_get_contents($pipes[ 1 ]) . stream_get_contents($pipes[ 2 ]);
+            $output = sprintf('%s%s', stream_get_contents($pipes[ 1 ]), stream_get_contents($pipes[ 2 ]));
             fclose($pipes[ 1 ]);
             fclose($pipes[ 2 ]);
 

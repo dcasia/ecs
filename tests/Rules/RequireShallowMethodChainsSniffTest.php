@@ -14,7 +14,10 @@ final class RequireShallowMethodChainsSniffTest extends EcsTestCase
             fixture: __DIR__ . '/../Fixtures/RequireShallowMethodChains/deep.php',
             messages: [
                 'Nested method chain reaches level 4; the maximum is 3.',
-                'Extract the chain passed to `icons()` into a named method',
+                'Extract the chain passed to `icons()`',
+                'private method on the class',
+                'pass its result as `$this->...()`',
+                'do not add local variables merely to reduce',
             ],
         );
     }

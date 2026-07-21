@@ -79,7 +79,7 @@ final class ExtractMultilineConditionFixer extends AbstractFixer implements Whit
 
             do {
 
-                $variable = '$condition' . ($conditionNumber === 1 ? '' : (string) $conditionNumber);
+                $variable = sprintf('$condition%s', $conditionNumber === 1 ? '' : (string) $conditionNumber);
                 $conditionNumber++;
 
             } while (isset($usedVariables[ $variable ]));
@@ -211,7 +211,7 @@ final class ExtractMultilineConditionFixer extends AbstractFixer implements Whit
                 new Token([ T_WHITESPACE, ' ' ]),
                 ...$condition,
                 new Token(';'),
-                new Token([ T_WHITESPACE, $this->whitespacesConfig->getLineEnding() . $indent ]),
+                new Token([ T_WHITESPACE, sprintf('%s%s', $this->whitespacesConfig->getLineEnding(), $indent) ]),
             ],
         );
     }

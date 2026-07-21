@@ -72,7 +72,7 @@ final class FunctionOpeningBracketFixer extends AbstractFixer implements Whitesp
 
             $indent = $this->findIndent($tokens, $index);
             $whitespace = $openBracket - 1;
-            $content = $this->whitespacesConfig->getLineEnding() . $indent;
+            $content = sprintf('%s%s', $this->whitespacesConfig->getLineEnding(), $indent);
 
             if ($tokens[ $whitespace ]->isWhitespace()) {
 

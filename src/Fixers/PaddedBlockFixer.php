@@ -231,10 +231,10 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
             throw new Exception('Currently not an whitespace...');
         }
 
-        $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding()
-            . $this->token($tokens, $index)->getContent(),
-        );
+        $tokens[ $index ] = new Token(sprintf('%s%s',
+            $this->whitespacesConfig->getLineEnding(),
+            $this->token($tokens, $index)->getContent(),
+        ));
     }
 
     /**
@@ -246,10 +246,10 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
             throw new Exception('Currently not an whitespace...');
         }
 
-        $tokens[ $index ] = new Token(
-            $this->whitespacesConfig->getLineEnding()
-            . $this->getIndent($tokens, $index),
-        );
+        $tokens[ $index ] = new Token(sprintf('%s%s',
+            $this->whitespacesConfig->getLineEnding(),
+            $this->getIndent($tokens, $index),
+        ));
     }
 
     private function getIndent(Tokens $tokens, int $index): string

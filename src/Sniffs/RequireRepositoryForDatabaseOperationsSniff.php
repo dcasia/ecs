@@ -297,7 +297,7 @@ final class RequireRepositoryForDatabaseOperationsSniff implements Sniff
                 break;
             }
 
-            $name .= $tokens[ $index ][ 'content' ];
+            $name = sprintf('%s%s', $name, $tokens[ $index ][ 'content' ]);
 
         }
 

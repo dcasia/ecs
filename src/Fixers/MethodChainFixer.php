@@ -370,13 +370,13 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
 
             if ($lineBreak >= 0) {
 
-                $content = substr($tokenContent, $lineBreak + 1) . $content;
+                $content = sprintf('%s%s', substr($tokenContent, $lineBreak + 1), $content);
 
                 break;
 
             }
 
-            $content = $tokenContent . $content;
+            $content = sprintf('%s%s', $tokenContent, $content);
 
         }
 
@@ -392,7 +392,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
                 continue;
             }
 
-            $content .= $tokens[ $index ]->getContent();
+            $content = sprintf('%s%s', $content, $tokens[ $index ]->getContent());
 
         }
 
@@ -476,7 +476,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
 
             if (isset($compactWhitespace[ $index ])) {
 
-                $callContent .= ' ';
+                $callContent = sprintf('%s ', $callContent);
 
                 continue;
 
@@ -488,7 +488,7 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
                 return;
             }
 
-            $callContent .= $content;
+            $callContent = sprintf('%s%s', $callContent, $content);
 
         }
 

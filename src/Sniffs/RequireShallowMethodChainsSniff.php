@@ -30,7 +30,7 @@ final class RequireShallowMethodChainsSniff implements Sniff
         }
 
         $phpcsFile->addError(
-            error: 'Nested method chain reaches level %d; the maximum is %d. Extract the chain passed to `%s()` into a named method or local variable, then pass the simpler result instead.',
+            error: 'Nested method chain reaches level %d; the maximum is %d. Extract the chain passed to `%s()` into a descriptive private method on the class and pass its result as `$this->...()`; do not add local variables merely to reduce nesting.',
             stackPtr: $stackPtr,
             code: 'TooDeep',
             data: [ $nestingLevel, self::MAXIMUM_NESTING_LEVEL, $containingCall ],
