@@ -37,4 +37,14 @@ final class StatementGroupingFixerTest extends EcsTestCase
             $fixtureDirectory . '/After/MultilineWorkflow.php',
         );
     }
+
+    public function test_groups_destructuring_assignments_and_properties_by_type(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
+
+        $this->assertFixtureIsFixedTo(
+            $fixtureDirectory . '/Before/AssignmentAndProperties.php',
+            $fixtureDirectory . '/After/AssignmentAndProperties.php',
+        );
+    }
 }

@@ -168,13 +168,28 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
      */
     private function findGroup(Tokens $tokens, int $start, int $end): ?array
     {
+        $propertyGroup = $this->findPropertyGroup($tokens, $start, $end);
+
+        if ($propertyGroup !== null) {
+
+            return [
+                'kind' => $propertyGroup,
+                'receiver' => null,
+            ];
+
+        }
+
         $token = $tokens[ $start ];
         $receiver = $token->isGivenKind(T_VARIABLE) ? $token->getContent() : null;
 
         if ($this->isAssignment($tokens, $start, $end)) {
 
+            $kind = $token->getContent() === '[' || $token->isGivenKind(T_LIST)
+                ? 'assignment:destructuring'
+                : 'assignment';
+
             return [
-                'kind' => 'assignment',
+                'kind' => $kind,
                 'receiver' => $receiver,
             ];
 
@@ -210,6 +225,101 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
                 'kind' => 'function-call',
                 'receiver' => null,
             ];
+
+        }
+
+        return null;
+    }
+
+    private function findPropertyGroup(Tokens $tokens, int $start, int $end): ?string
+    {
+        $hasVisibility = false;
+        $isStatic = false;
+        $hasUnionType = false;
+        $hasIntersectionType = false;
+        $typeParts = [];
+
+        for ($index = $start; $index < $end; $index++) {
+
+            $token = $tokens[ $index ];
+
+            if ($token->isGivenKind([ T_FUNCTION, T_CONST ])) {
+                return null;
+            }
+
+            if ($token->isGivenKind([ T_PUBLIC, T_PROTECTED, T_PRIVATE, T_VAR ])) {
+
+                $hasVisibility = true;
+
+                continue;
+
+            }
+
+            if ($token->isGivenKind(T_STATIC)) {
+
+                $isStatic = true;
+
+                continue;
+
+            }
+
+            if ($token->isGivenKind([ T_READONLY, T_FINAL ]) || $token->isWhitespace() || $token->isComment()) {
+                continue;
+            }
+
+            $block = Tokens::detectBlockType($token);
+
+            if ($block !== null && $block[ 'isStart' ] && $block[ 'type' ] === Tokens::BLOCK_TYPE_ATTRIBUTE) {
+
+                $index = $tokens->findBlockEnd($block[ 'type' ], $index);
+
+                continue;
+
+            }
+
+            if ($token->isGivenKind(T_VARIABLE)) {
+
+                if ($hasVisibility === false) {
+                    return null;
+                }
+
+                if ($isStatic) {
+                    return 'property:static';
+                }
+
+                if ($hasUnionType) {
+                    return 'property:union';
+                }
+
+                if ($hasIntersectionType) {
+                    return 'property:intersection';
+                }
+
+                $type = strtolower(implode('', $typeParts));
+
+                return $type === ''
+                    ? 'property:untyped'
+                    : sprintf('property:type:%s', $type);
+
+            }
+
+            if ($token->getContent() === '|') {
+
+                $hasUnionType = true;
+
+                continue;
+
+            }
+
+            if ($token->getContent() === '&') {
+
+                $hasIntersectionType = true;
+
+                continue;
+
+            }
+
+            $typeParts[] = $token->getContent();
 
         }
 
@@ -266,17 +376,21 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
      */
     private function belongToSameGroup(array $previous, array $current): bool
     {
-        if ($previous[ 'kind' ] === 'assignment' && $current[ 'kind' ] === 'assignment') {
-            return true;
-        }
-
         if ($previous[ 'receiver' ] !== null
             && $previous[ 'receiver' ] === $current[ 'receiver' ]) {
             return true;
         }
 
-        return $previous[ 'kind' ] === $current[ 'kind' ]
-            && in_array($previous[ 'kind' ], [ 'static-call', 'function-call' ], true);
+        if ($previous[ 'kind' ] !== $current[ 'kind' ]) {
+            return false;
+        }
+
+        return in_array($previous[ 'kind' ], [
+            'assignment',
+            'assignment:destructuring',
+            'static-call',
+            'function-call',
+        ], true) || str_starts_with($previous[ 'kind' ], 'property:');
     }
 
     private function containsOnlyWhitespace(Tokens $tokens, int $previousEnd, int $currentStart): bool
