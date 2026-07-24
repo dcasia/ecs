@@ -33,6 +33,16 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         );
     }
 
+    final protected function assertLaravelFixtureIsFixedTo(string $inputFixture, string $expectedFixture): void
+    {
+        $this->assertCodeIsFixedTo(
+            $this->readFixture($inputFixture),
+            $this->readFixture($expectedFixture),
+            basename($inputFixture),
+            true,
+        );
+    }
+
     final protected function assertFixturePasses(string $fixture): void
     {
         $source = $this->readFixture($fixture);
@@ -44,6 +54,7 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         string $input,
         string $expected,
         string $temporaryFilename = 'fixture.php',
+        bool $laravelProject = false,
     ): void
     {
         self::assertNotEmpty($this->fixerFileProcessor->getCheckers(), 'The ECS configuration registered no fixers.');
@@ -58,6 +69,10 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
             throw new RuntimeException(sprintf('Unable to create temporary directory "%s".', $temporaryDirectory));
         }
 
+        if ($laravelProject) {
+            $this->createLaravelApplicationFiles($temporaryDirectory);
+        }
+
         $temporaryFile = sprintf('%s/%s', $temporaryDirectory, $temporaryFilename);
 
         if (file_put_contents($temporaryFile, $input) === false) {
@@ -68,7 +83,26 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
             self::assertSame($expected, $this->fixerFileProcessor->processFileToString($temporaryFile));
         } finally {
             unlink($temporaryFile);
+
+            if ($laravelProject) {
+
+                unlink(sprintf('%s/artisan', $temporaryDirectory));
+                unlink(sprintf('%s/bootstrap/app.php', $temporaryDirectory));
+                rmdir(sprintf('%s/bootstrap', $temporaryDirectory));
+
+            }
             rmdir($temporaryDirectory);
+        }
+    }
+
+    private function createLaravelApplicationFiles(string $temporaryDirectory): void
+    {
+        $bootstrapDirectory = sprintf('%s/bootstrap', $temporaryDirectory);
+
+        if (mkdir($bootstrapDirectory) === false
+            || file_put_contents(sprintf('%s/artisan', $temporaryDirectory), '') === false
+            || file_put_contents(sprintf('%s/app.php', $bootstrapDirectory), "<?php\n") === false) {
+            throw new RuntimeException('Unable to create temporary Laravel application files.');
         }
     }
 
