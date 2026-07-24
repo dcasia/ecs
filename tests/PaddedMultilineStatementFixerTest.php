@@ -17,4 +17,11 @@ final class PaddedMultilineStatementFixerTest extends EcsTestCase
             $fixtureDirectory . '/After/MultilineStatements.php',
         );
     }
+
+    public function test_array_offset_traversal_does_not_crash(): void
+    {
+        $this->assertFixturePasses(
+            __DIR__ . '/Fixtures/PaddedMultilineStatementFixer/Valid/CampaignSlideshowResource.php',
+        );
+    }
 }

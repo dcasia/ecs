@@ -127,6 +127,16 @@ final class PaddedMultilineStatementFixer extends AbstractFixer implements White
                 return $tokens->getNextMeaningfulToken($previous);
             }
 
+            $block = Tokens::detectBlockType($token);
+
+            if ($block === null || $block[ 'isStart' ]) {
+
+                $cursor = $previous;
+
+                continue;
+
+            }
+
             if ($token->equals('}')) {
 
                 $next = $tokens->getNextMeaningfulToken($previous);
@@ -135,29 +145,9 @@ final class PaddedMultilineStatementFixer extends AbstractFixer implements White
                     return $next;
                 }
 
-                $cursor = $tokens->findBlockStart(Tokens::BLOCK_TYPE_CURLY_BRACE, $previous);
-
-                continue;
-
             }
 
-            if ($token->equals(')')) {
-
-                $cursor = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $previous);
-
-                continue;
-
-            }
-
-            if ($token->equals(']')) {
-
-                $cursor = $tokens->findBlockStart(Tokens::BLOCK_TYPE_ARRAY_SQUARE_BRACE, $previous);
-
-                continue;
-
-            }
-
-            $cursor = $previous;
+            $cursor = $tokens->findBlockStart($block[ 'type' ], $previous);
 
         }
 

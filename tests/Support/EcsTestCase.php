@@ -33,6 +33,13 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         );
     }
 
+    final protected function assertFixturePasses(string $fixture): void
+    {
+        $source = $this->readFixture($fixture);
+
+        $this->assertCodeIsFixedTo($source, $source, basename($fixture));
+    }
+
     final protected function assertCodeIsFixedTo(
         string $input,
         string $expected,
