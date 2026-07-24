@@ -29,22 +29,29 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         $this->assertCodeIsFixedTo(
             $this->readFixture($inputFixture),
             $this->readFixture($expectedFixture),
+            basename($inputFixture),
         );
     }
 
-    final protected function assertCodeIsFixedTo(string $input, string $expected): void
+    final protected function assertCodeIsFixedTo(
+        string $input,
+        string $expected,
+        string $temporaryFilename = 'fixture.php',
+    ): void
     {
         self::assertNotEmpty($this->fixerFileProcessor->getCheckers(), 'The ECS configuration registered no fixers.');
 
-        $temporaryDirectory = sprintf('%s/digital-creative-ecs-tests', sys_get_temp_dir());
+        $temporaryDirectory = sprintf(
+            '%s/digital-creative-ecs-tests/%s',
+            sys_get_temp_dir(),
+            bin2hex(random_bytes(16)),
+        );
 
-        if (is_dir($temporaryDirectory) === false
-            && mkdir($temporaryDirectory, recursive: true) === false
-            && is_dir($temporaryDirectory) === false) {
+        if (mkdir($temporaryDirectory, recursive: true) === false && is_dir($temporaryDirectory) === false) {
             throw new RuntimeException(sprintf('Unable to create temporary directory "%s".', $temporaryDirectory));
         }
 
-        $temporaryFile = sprintf('%s/%s.php', $temporaryDirectory, bin2hex(random_bytes(16)));
+        $temporaryFile = sprintf('%s/%s', $temporaryDirectory, $temporaryFilename);
 
         if (file_put_contents($temporaryFile, $input) === false) {
             throw new RuntimeException(sprintf('Unable to write temporary fixture "%s".', $temporaryFile));
@@ -54,6 +61,7 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
             self::assertSame($expected, $this->fixerFileProcessor->processFileToString($temporaryFile));
         } finally {
             unlink($temporaryFile);
+            rmdir($temporaryDirectory);
         }
     }
 

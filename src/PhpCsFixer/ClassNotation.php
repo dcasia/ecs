@@ -24,7 +24,7 @@ use PhpCsFixer\Fixer\ClassNotation\SingleTraitInsertPerStatementFixer;
 use PhpCsFixer\Fixer\ClassNotation\VisibilityRequiredFixer;
 
 return register_fixers([
-    ClassAttributesSeparationFixer::class => false,
+    ClassAttributesSeparationFixer::class => [ 'elements' => [ 'method' => 'one' ] ],
     ClassDefinitionFixer::class => [
         'multi_line_extends_each_single_line' => true,
         'single_item_single_line' => true,
