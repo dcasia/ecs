@@ -10,11 +10,13 @@ use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
+use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
 
 return register_fixers([
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
     PaddedMultilineStatementFixer::class => true,
+    StatementGroupingFixer::class => true,
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
     LaravelEmptyToBlankFixer::class => true,

@@ -35,10 +35,8 @@ final class ClassOpeningBracketFixer extends AbstractFixer implements Whitespace
 
                 $openBracketsIndex = $tokens->getNextTokenOfKind($index, [ '{' ]);
                 $closeBracketsIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $openBracketsIndex);
-
                 $beforeOpenBracketToken = $tokens[ $openBracketsIndex + 1 ];
                 $beforeCloseBracketToken = $tokens[ $closeBracketsIndex - 1 ];
-
                 $openWhitespace = preg_replace('~\R+~', $this->whitespacesConfig->getLineEnding(), $beforeOpenBracketToken->getContent());
                 $closeWhitespace = preg_replace('~\R+~', $this->whitespacesConfig->getLineEnding(), $beforeCloseBracketToken->getContent());
 

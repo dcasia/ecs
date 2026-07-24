@@ -49,7 +49,9 @@ final class LaravelEmptyToBlankFixer extends AbstractFixer
             if ($previous !== null && $tokens[ $previous ]->equals('!')) {
 
                 $tokens->clearAt($previous);
+
                 $this->clearWhitespaceBetween($tokens, $previous, $index);
+
                 $replacement = 'filled';
 
             }

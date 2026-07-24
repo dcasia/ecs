@@ -39,7 +39,6 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
         while ($start = $tokens->getNextTokenOfKind($index, [ [ T_OBJECT_OPERATOR ] ])) {
 
             $index = $start;
-
             $previousToken = $tokens[ $start - 1 ];
             $previousMeaningfulToken = $tokens[ $tokens->getPrevMeaningfulToken($start) ];
 
@@ -76,7 +75,6 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
             if ($maybeOpenParenthesis->equals('(')) {
 
                 $closeParenthesis = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openParenthesisIndex);
-
                 $maybeObjectOperator = $tokens[ $nextObjectOperator = $tokens->getNextMeaningfulToken($closeParenthesis) ];
 
                 if ($maybeObjectOperator->isGivenKind(T_OBJECT_OPERATOR)) {
@@ -105,7 +103,6 @@ final class MethodChainFixer extends AbstractFixer implements WhitespacesAwareFi
             if ($maybeCloseParenthesis->equals(')')) {
 
                 $openParenthesis = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $closeParenthesisIndex);
-
                 $maybeObjectOperator = $tokens[ $previousObjectOperator = $tokens->getPrevMeaningfulToken($openParenthesis - 1) ];
 
                 if ($maybeObjectOperator->isGivenKind(T_OBJECT_OPERATOR)) {
