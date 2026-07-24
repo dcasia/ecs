@@ -8,10 +8,12 @@ use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
+use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
 
 return register_fixers([
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
+    PaddedMultilineStatementFixer::class => true,
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
 ])->withSets([

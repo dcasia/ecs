@@ -75,6 +75,7 @@ final class ConstructorBracesFixer extends AbstractFixer implements WhitespacesA
                     1,
                     $lineEnding . $indentation,
                 );
+
                 $tokens->ensureWhitespaceAtIndex(
                     $openBraceIndex + 1,
                     0,
