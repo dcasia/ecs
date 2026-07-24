@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace DigitalCreative\ECS;
 
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
+use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 
@@ -12,6 +13,7 @@ return register_fixers([
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
     ClassOpeningBracketFixer::class => true,
+    ConstructorBracesFixer::class => true,
 ])->withSets([
     __DIR__ . '/PhpCsFixer/Alias.php',
     __DIR__ . '/PhpCsFixer/ArrayNotation.php',
