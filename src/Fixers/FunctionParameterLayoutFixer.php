@@ -71,23 +71,27 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
 
             if ($tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false)) {
 
-                if ($this->hasNonEmptyBody($tokens, $closeParenthesis)
-                    && $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis)) {
-                    continue;
+                $wasCompacted = $this->hasNonEmptyBody($tokens, $closeParenthesis)
+                    && $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis);
+
+                if ($wasCompacted === false) {
+
+                    $this->expandConstructorParameters(
+                        $tokens,
+                        $index,
+                        $openParenthesis,
+                        $closeParenthesis,
+                    );
+
                 }
 
-                $this->expandConstructorParameters(
-                    $tokens,
-                    $index,
-                    $openParenthesis,
-                    $closeParenthesis,
-                );
+            } else {
 
-                continue;
+                $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis);
 
             }
 
-            $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis);
+            $this->placeOpeningBraceOnOwnLine($tokens, $index, $closeParenthesis);
 
         }
     }
@@ -125,12 +129,40 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         return $firstBodyToken !== null && $firstBodyToken !== $closeBrace;
     }
 
+    private function placeOpeningBraceOnOwnLine(Tokens $tokens, int $functionIndex, int $closeParenthesis): void
+    {
+        $openBrace = $tokens->getNextTokenOfKind($closeParenthesis, [ '{', ';' ]);
+
+        if ($openBrace === null || $tokens[ $openBrace ]->equals('{') === false) {
+            return;
+        }
+
+        $content = sprintf(
+            '%s%s',
+            $this->whitespacesConfig->getLineEnding(),
+            $this->getLineIndentation($tokens, $functionIndex),
+        );
+
+        $whitespaceIndex = $openBrace - 1;
+
+        if ($tokens[ $whitespaceIndex ]->isWhitespace()) {
+
+            $tokens[ $whitespaceIndex ] = new Token([ T_WHITESPACE, $content ]);
+
+            return;
+
+        }
+
+        $tokens->insertAt($openBrace, new Token([ T_WHITESPACE, $content ]));
+    }
+
     private function expandConstructorParameters(
         Tokens $tokens,
         int $functionIndex,
         int $openParenthesis,
         int $closeParenthesis,
-    ): void {
+    ): void
+    {
         $firstParameter = $tokens->getNextMeaningfulToken($openParenthesis);
 
         if ($firstParameter === null || $firstParameter === $closeParenthesis) {
@@ -344,7 +376,8 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         return $commas;
     }
 
-    private function getCompactedParameterLength(Tokens $tokens, int $openParenthesis, int $closeParenthesis): int {
+    private function getCompactedParameterLength(Tokens $tokens, int $openParenthesis, int $closeParenthesis): int
+    {
         $parts = [];
         $trailingComma = $tokens->getPrevMeaningfulToken($closeParenthesis);
 

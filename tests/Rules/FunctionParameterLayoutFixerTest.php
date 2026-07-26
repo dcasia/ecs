@@ -29,6 +29,14 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
+    public function test_places_the_opening_brace_after_a_compacted_signature(): void
+    {
+        $this->assertFixtureIsFixedTo(
+            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/opening_brace_unfixed.php',
+            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/opening_brace_fixed.php',
+        );
+    }
+
     public function test_keeps_functions_with_many_parameters_expanded(): void
     {
         $this->assertFixturePasses(
