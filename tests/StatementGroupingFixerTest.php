@@ -47,4 +47,14 @@ final class StatementGroupingFixerTest extends EcsTestCase
             $fixtureDirectory . '/After/AssignmentAndProperties.php',
         );
     }
+
+    public function test_only_adds_group_separators_without_removing_existing_lines(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
+
+        $this->assertFixtureIsFixedTo(
+            $fixtureDirectory . '/Before/AdditiveGrouping.php',
+            $fixtureDirectory . '/After/AdditiveGrouping.php',
+        );
+    }
 }

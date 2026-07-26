@@ -31,6 +31,7 @@ final class CampaignWorkflow
         Storage::disk()->put('campaigns/sharing/poster.jpg', 'image');
 
         $campaign->name = 'Updated campaign name';
+
         $campaign->save();
 
         Queue::assertNothingPushed();

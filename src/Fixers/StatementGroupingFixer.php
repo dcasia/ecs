@@ -20,7 +20,7 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Adjacent expression statements must be grouped by their variable receiver or call type.',
+            'Adds blank lines between adjacent expression statements with different receivers or call types without removing existing separation.',
             [],
         );
     }
@@ -48,14 +48,14 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
                 continue;
             }
 
-            $requiresBlankLine = $this->belongToSameGroup($previous, $current) === false
-                || $previous[ 'multiline' ];
+            if ($this->belongToSameGroup($previous, $current) && $previous[ 'multiline' ] === false) {
+                continue;
+            }
 
-            $this->normalizeBoundaryWhitespace(
+            $this->ensureBlankLineBetween(
                 $tokens,
                 $previous[ 'end' ],
                 $current[ 'start' ],
-                $requiresBlankLine,
             );
 
         }
@@ -406,20 +406,9 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
         return true;
     }
 
-    private function normalizeBoundaryWhitespace(
-        Tokens $tokens,
-        int $previousEnd,
-        int $currentStart,
-        bool $blankLine,
-    ): void {
-        $lineEnding = $this->whitespacesConfig->getLineEnding();
-        $lineBreaks = $blankLine ? 2 : 1;
-        $whitespaceContent = sprintf(
-            '%s%s',
-            str_repeat($lineEnding, $lineBreaks),
-            $this->getLineIndentation($tokens, $currentStart),
-        );
-
+    private function ensureBlankLineBetween(Tokens $tokens, int $previousEnd, int $currentStart): void
+    {
+        $lineBreaks = 0;
         $whitespaceIndex = null;
 
         for ($index = $previousEnd + 1; $index < $currentStart; $index++) {
@@ -428,29 +417,43 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
                 continue;
             }
 
-            if ($whitespaceIndex === null) {
-
-                $whitespaceIndex = $index;
-
-                continue;
-
-            }
-
-            $tokens->clearAt($index);
+            $lineBreaks += substr_count($tokens[ $index ]->getContent(), "\n");
+            $whitespaceIndex ??= $index;
 
         }
+
+        if ($lineBreaks >= 2) {
+            return;
+        }
+
+        $lineEnding = $this->whitespacesConfig->getLineEnding();
+        $missingLineBreaks = 2 - $lineBreaks;
 
         if ($whitespaceIndex === null) {
 
             $tokens->insertAt(
                 $previousEnd + 1,
-                new Token([ T_WHITESPACE, $whitespaceContent ]),
+                new Token([
+                    T_WHITESPACE,
+                    sprintf(
+                        '%s%s',
+                        str_repeat($lineEnding, $missingLineBreaks),
+                        $this->getLineIndentation($tokens, $currentStart),
+                    ),
+                ]),
             );
 
             return;
 
         }
 
-        $tokens[ $whitespaceIndex ] = new Token([ T_WHITESPACE, $whitespaceContent ]);
+        $tokens[ $whitespaceIndex ] = new Token([
+            T_WHITESPACE,
+            sprintf(
+                '%s%s',
+                str_repeat($lineEnding, $missingLineBreaks),
+                $tokens[ $whitespaceIndex ]->getContent(),
+            ),
+        ]);
     }
 }

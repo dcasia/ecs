@@ -27,6 +27,7 @@ final class MultilineWorkflow
     public function savesMultilineData(): void
     {
         $campaign->name = 'Updated campaign name';
+
         $campaign->data = [
             1,
             2,
