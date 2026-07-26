@@ -21,6 +21,14 @@ final class PaddedBlockFixerTest extends EcsTestCase
         );
     }
 
+    public function test_removes_trailing_padding_from_named_functions(): void
+    {
+        $this->assertFixtureIsFixedTo(
+            inputFixture: __DIR__ . '/../Fixtures/PaddedBlock/named_function_padding_unfixed.php',
+            expectedFixture: __DIR__ . '/../Fixtures/PaddedBlock/named_function_padding_fixed.php',
+        );
+    }
+
     public function test_does_not_separate_linked_control_blocks(): void
     {
         $this->assertFixturePasses(
