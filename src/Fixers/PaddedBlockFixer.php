@@ -27,7 +27,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     public function isCandidate(Tokens $tokens): bool
     {
         return $tokens->isAnyTokenKindsFound([
-            T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF, T_FUNCTION,
+            T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_FINALLY, T_ELSEIF, T_FUNCTION,
         ]);
     }
 
@@ -45,9 +45,15 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
             $token = $this->token($tokens, $index);
 
-            if ($token->isGivenKind([ T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF ])) {
+            if ($token->isGivenKind([
+                T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_FINALLY, T_ELSEIF,
+            ])) {
 
-                $this->fixBlock($tokens, $index);
+                $blockEndIndex = $this->fixBlock($tokens, $index);
+
+                if ($blockEndIndex !== null) {
+                    $this->ensureBlankLineAfterBlock($tokens, $index, $blockEndIndex);
+                }
 
             } else if ($token->isGivenKind([ T_FUNCTION ])) {
 
@@ -98,12 +104,12 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     /**
      * @throws Exception
      */
-    private function fixBlock(Tokens $tokens, int $start): void
+    private function fixBlock(Tokens $tokens, int $start): ?int
     {
         [ $blockStartIndex, $blockEndIndex ] = $this->getBlockBoundaries($tokens, $start) ?? [ null, null ];
 
         if ($blockStartIndex === null || $blockEndIndex === null) {
-            return;
+            return null;
         }
 
         /**
@@ -134,7 +140,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
                 $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
 
-                return;
+                return $blockEndIndex;
 
             }
 
@@ -159,6 +165,43 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         if ($this->countNewLines($tokens, $blockEndIndex - 1) !== 2) {
             $this->ensureWhitespaceAtIndex($tokens, $blockEndIndex - 1);
         }
+
+        return $blockEndIndex;
+    }
+
+    private function ensureBlankLineAfterBlock(Tokens $tokens, int $start, int $blockEndIndex): void
+    {
+        $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($blockEndIndex);
+
+        if ($nextMeaningfulIndex === null) {
+            return;
+        }
+
+        $nextMeaningfulToken = $this->token($tokens, $nextMeaningfulIndex);
+
+        if ($nextMeaningfulToken->equals('}')
+            || $nextMeaningfulToken->isGivenKind([ T_ELSE, T_ELSEIF, T_CATCH, T_FINALLY ])
+            || ($this->token($tokens, $start)->isGivenKind(T_DO) && $nextMeaningfulToken->isGivenKind(T_WHILE))) {
+            return;
+        }
+
+        $whitespaceIndex = $blockEndIndex + 1;
+        $whitespaceToken = $this->token($tokens, $whitespaceIndex);
+
+        if ($whitespaceToken->isWhitespace() === false) {
+            return;
+        }
+
+        $missingNewLines = 2 - $this->countNewLines($tokens, $whitespaceIndex);
+
+        if ($missingNewLines <= 0) {
+            return;
+        }
+
+        $tokens[ $whitespaceIndex ] = new Token(
+            str_repeat($this->whitespacesConfig->getLineEnding(), $missingNewLines)
+            . $whitespaceToken->getContent(),
+        );
     }
 
     /**

@@ -19,7 +19,7 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         $this->fixerFileProcessor = $this->make(FixerFileProcessor::class);
     }
 
-    final public function provideConfig(): string
+    public function provideConfig(): string
     {
         return dirname(__DIR__, 2) . '/src/Custom.php';
     }
@@ -82,6 +82,7 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         try {
             self::assertSame($expected, $this->fixerFileProcessor->processFileToString($temporaryFile));
         } finally {
+
             unlink($temporaryFile);
 
             if ($laravelProject) {
@@ -91,7 +92,9 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
                 rmdir(sprintf('%s/bootstrap', $temporaryDirectory));
 
             }
+
             rmdir($temporaryDirectory);
+
         }
     }
 
