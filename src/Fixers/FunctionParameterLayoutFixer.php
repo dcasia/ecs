@@ -20,14 +20,12 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
 
     private const string CONSTRUCTOR_NAME = '__construct';
 
-    private const int MAXIMUM_INLINE_PARAMETERS = 3;
-
-    private const int MAXIMUM_LINE_LENGTH = 120;
+    private const int MAXIMUM_INLINE_PARAMETERS = 6;
 
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Empty-body constructors use multiline parameters while simple body constructors and short named functions use one line.',
+            summary: 'Simple named functions with up to six parameters use one line; empty-body constructors with parameters use multiline parameters.',
             codeSamples: [
                 new CodeSample("<?php\n\nfinal class Example\n{\n    public function __construct(public readonly string \$name)\n    {\n    }\n\n    public static function create(\n        string \$name,\n    ): self\n    {\n    }\n}\n"),
             ],
@@ -69,25 +67,24 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
                 $openParenthesis,
             );
 
-            if ($tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false)) {
+            $layout = $this->inspectSimpleParameters($tokens, $openParenthesis, $closeParenthesis);
+            $isConstructor = $tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false);
+            $shouldCompact = $layout !== null
+                && $layout[ 'parameters' ] <= self::MAXIMUM_INLINE_PARAMETERS
+                && ($isConstructor === false || $this->hasNonEmptyBody($tokens, $closeParenthesis));
 
-                $wasCompacted = $this->hasNonEmptyBody($tokens, $closeParenthesis)
-                    && $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis);
+            if ($shouldCompact) {
 
-                if ($wasCompacted === false) {
+                $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis, $layout);
 
-                    $this->expandConstructorParameters(
-                        $tokens,
-                        $index,
-                        $openParenthesis,
-                        $closeParenthesis,
-                    );
+            } elseif ($isConstructor || $layout !== null) {
 
-                }
-
-            } else {
-
-                $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis);
+                $this->expandFunctionParameters(
+                    $tokens,
+                    $index,
+                    $openParenthesis,
+                    $closeParenthesis,
+                );
 
             }
 
@@ -156,12 +153,7 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         $tokens->insertAt($openBrace, new Token([ T_WHITESPACE, $content ]));
     }
 
-    private function expandConstructorParameters(
-        Tokens $tokens,
-        int $functionIndex,
-        int $openParenthesis,
-        int $closeParenthesis,
-    ): void
+    private function expandFunctionParameters(Tokens $tokens, int $functionIndex, int $openParenthesis, int $closeParenthesis): void
     {
         $firstParameter = $tokens->getNextMeaningfulToken($openParenthesis);
 
@@ -228,28 +220,11 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         $tokens->insertAt($whitespaceIndex, new Token([ T_WHITESPACE, $content ]));
     }
 
-    private function compactFunctionParameters(Tokens $tokens, int $openParenthesis, int $closeParenthesis): bool
+    /**
+     * @param array{parameters: int, whitespace: list<int>} $layout
+     */
+    private function compactFunctionParameters(Tokens $tokens, int $openParenthesis, int $closeParenthesis, array $layout): void
     {
-        $layout = $this->inspectSimpleParameters($tokens, $openParenthesis, $closeParenthesis);
-
-        if ($layout === null || $layout[ 'parameters' ] > self::MAXIMUM_INLINE_PARAMETERS) {
-            return false;
-        }
-
-        $compactedParameterLength = $this->getCompactedParameterLength(
-            $tokens,
-            $openParenthesis,
-            $closeParenthesis,
-        );
-
-        $signatureLength = $this->getLineLengthThrough($tokens, $openParenthesis)
-            + $compactedParameterLength
-            + $this->getLineLengthFrom($tokens, $closeParenthesis);
-
-        if ($signatureLength > self::MAXIMUM_LINE_LENGTH) {
-            return false;
-        }
-
         for ($index = count($layout[ 'whitespace' ]) - 1; $index >= 0; $index--) {
 
             $whitespaceIndex = $layout[ 'whitespace' ][ $index ];
@@ -277,8 +252,6 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         if ($trailingComma !== null && $tokens[ $trailingComma ]->equals(',')) {
             $tokens->clearAt($trailingComma);
         }
-
-        return true;
     }
 
     /**
@@ -374,87 +347,6 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         }
 
         return $commas;
-    }
-
-    private function getCompactedParameterLength(Tokens $tokens, int $openParenthesis, int $closeParenthesis): int
-    {
-        $parts = [];
-        $trailingComma = $tokens->getPrevMeaningfulToken($closeParenthesis);
-
-        for ($index = $openParenthesis + 1; $index < $closeParenthesis; $index++) {
-
-            if ($index === $trailingComma && $tokens[ $index ]->equals(',')) {
-                continue;
-            }
-
-            $token = $tokens[ $index ];
-
-            if ($token->isWhitespace() === false || str_contains($token->getContent(), "\n") === false) {
-
-                $parts[] = $token->getContent();
-
-                continue;
-
-            }
-
-            $previous = $tokens->getPrevMeaningfulToken($index);
-            $next = $tokens->getNextMeaningfulToken($index);
-
-            if ($previous !== null
-                && $next !== null
-                && $previous !== $openParenthesis
-                && $next !== $closeParenthesis
-                && $tokens[ $next ]->equals(',') === false) {
-                $parts[] = ' ';
-            }
-
-        }
-
-        return strlen(implode('', $parts));
-    }
-
-    private function getLineLengthThrough(Tokens $tokens, int $end): int
-    {
-        $length = 0;
-
-        for ($index = $end; $index >= 0; $index--) {
-
-            $content = $tokens[ $index ]->getContent();
-            $lastLineBreak = strrpos($content, "\n");
-
-            if ($lastLineBreak !== false) {
-                return $length + strlen(substr($content, $lastLineBreak + 1));
-            }
-
-            $length += strlen($content);
-
-        }
-
-        return $length;
-    }
-
-    private function getLineLengthFrom(Tokens $tokens, int $start): int
-    {
-        $length = 0;
-
-        for ($index = $start, $count = $tokens->count(); $index < $count; $index++) {
-
-            $content = $tokens[ $index ]->getContent();
-            $firstLineBreak = strpos($content, "\n");
-
-            if ($firstLineBreak !== false) {
-                return $length + $firstLineBreak;
-            }
-
-            $length += strlen($content);
-
-            if ($tokens[ $index ]->equalsAny([ '{', ';' ])) {
-                return $length;
-            }
-
-        }
-
-        return $length;
     }
 
     private function containsLineBreak(Tokens $tokens, int $start, int $end): bool

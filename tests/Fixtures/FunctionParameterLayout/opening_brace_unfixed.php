@@ -4,11 +4,12 @@ declare(strict_types = 1);
 
 final class StripeEventSanitizer
 {
-    public function sanitize(
+    private function sanitizeChargeDispute(
         FormProvider $provider,
+        string $stripeEventId,
         StripeWebhookEventType $eventType,
-        Event $event,
+        StripeObject $dispute,
     ): StripeEventData {
-        return StripeEventData::fromEvent($provider, $eventType, $event);
+        return StripeEventData::fromDispute($provider, $stripeEventId, $eventType, $dispute);
     }
 }

@@ -37,10 +37,11 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
-    public function test_keeps_functions_with_many_parameters_expanded(): void
+    public function test_expands_functions_with_more_than_six_parameters(): void
     {
-        $this->assertFixturePasses(
-            fixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/many_parameters.php',
+        $this->assertFixtureIsFixedTo(
+            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/many_parameters_unfixed.php',
+            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/many_parameters.php',
         );
     }
 
@@ -51,10 +52,11 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
-    public function test_keeps_overlong_signatures_expanded(): void
+    public function test_compacts_overlong_signatures_with_up_to_six_parameters(): void
     {
-        $this->assertFixturePasses(
-            fixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/long_signature.php',
+        $this->assertFixtureIsFixedTo(
+            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/long_signature.php',
+            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/long_signature_fixed.php',
         );
     }
 }
