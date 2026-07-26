@@ -10,16 +10,10 @@ final class MissingFormException extends RuntimeException
     }
 }
 
-final class PromotedBody
+final class ProviderNotRegisteredException extends RuntimeException
 {
-    public function __construct(
-        public readonly string $slug,
-    )
+    public function __construct(public readonly string $providerKey)
     {
-        $this->validate();
-    }
-
-    private function validate(): void
-    {
+        parent::__construct(sprintf('Form provider "%s" is not registered.', $providerKey));
     }
 }

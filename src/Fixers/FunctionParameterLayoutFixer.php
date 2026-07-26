@@ -27,7 +27,7 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Promoted-property and empty-body constructors use multiline parameters while simple body constructors and short named functions use one line.',
+            summary: 'Empty-body constructors use multiline parameters while simple body constructors and short named functions use one line.',
             codeSamples: [
                 new CodeSample("<?php\n\nfinal class Example\n{\n    public function __construct(public readonly string \$name)\n    {\n    }\n\n    public static function create(\n        string \$name,\n    ): self\n    {\n    }\n}\n"),
             ],
@@ -72,7 +72,6 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
             if ($tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false)) {
 
                 if ($this->hasNonEmptyBody($tokens, $closeParenthesis)
-                    && $this->hasPromotedParameter($tokens, $openParenthesis, $closeParenthesis) === false
                     && $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis)) {
                     continue;
                 }
@@ -124,30 +123,6 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         $firstBodyToken = $tokens->getNextMeaningfulToken($openBrace);
 
         return $firstBodyToken !== null && $firstBodyToken !== $closeBrace;
-    }
-
-    private function hasPromotedParameter(Tokens $tokens, int $openParenthesis, int $closeParenthesis): bool
-    {
-        for ($index = $openParenthesis + 1; $index < $closeParenthesis; $index++) {
-
-            $token = $tokens[ $index ];
-            $block = Tokens::detectBlockType($token);
-
-            if ($block !== null && $block[ 'isStart' ]) {
-
-                $index = $tokens->findBlockEnd($block[ 'type' ], $index);
-
-                continue;
-
-            }
-
-            if ($token->isGivenKind([ T_PUBLIC, T_PROTECTED, T_PRIVATE, T_READONLY ])) {
-                return true;
-            }
-
-        }
-
-        return false;
     }
 
     private function expandConstructorParameters(

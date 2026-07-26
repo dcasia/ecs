@@ -21,7 +21,7 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
-    public function test_compacts_simple_body_constructors_without_promoted_properties(): void
+    public function test_compacts_simple_body_constructors_including_promoted_properties(): void
     {
         $this->assertFixtureIsFixedTo(
             inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/body_constructor_unfixed.php',
