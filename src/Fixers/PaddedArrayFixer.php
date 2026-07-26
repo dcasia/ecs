@@ -54,7 +54,6 @@ final class PaddedArrayFixer extends AbstractFixer
         $openingBracket = $tokens[ $openingBracketIndex ];
         $closingBracketIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_ARRAY_SQUARE_BRACE, $openingBracketIndex);
         $closingBracket = $tokens[ $closingBracketIndex ];
-
         $nextMeaningFulTokenIndex = $tokens->getNextMeaningfulToken($openingBracketIndex);
 
         /**

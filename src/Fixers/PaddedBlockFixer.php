@@ -27,7 +27,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
     public function isCandidate(Tokens $tokens): bool
     {
         return $tokens->isAnyTokenKindsFound([
-            T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF, T_FUNCTION,
+            T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_FINALLY, T_ELSEIF, T_FUNCTION,
         ]);
     }
 
@@ -45,9 +45,15 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
             $token = $this->token($tokens, $index);
 
-            if ($token->isGivenKind([ T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_ELSEIF ])) {
+            if ($token->isGivenKind([
+                T_IF, T_ELSE, T_FOR, T_FOREACH, T_WHILE, T_DO, T_TRY, T_CATCH, T_FINALLY, T_ELSEIF,
+            ])) {
 
-                $this->fixBlock($tokens, $index);
+                $blockEndIndex = $this->fixBlock($tokens, $index);
+
+                if ($blockEndIndex !== null) {
+                    $this->ensureBlankLineAfterBlock($tokens, $index, $blockEndIndex);
+                }
 
             } else if ($token->isGivenKind([ T_FUNCTION ])) {
 
@@ -74,36 +80,61 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
      */
     private function ensureNotPadded(Tokens $tokens, int $start): void
     {
-        if ($boundaries = $this->getBlockBoundaries($tokens, $start)) {
+        $boundaries = $this->getBlockBoundaries($tokens, $start);
 
-            /**
-             * public function name()
-             * {
-             *   •
-             *   // body
-             *   •
-             * }
-             */
-            if ($this->countNewLines($tokens, $boundaries[ 0 ] + 1) > 1) {
-                $this->removeLineAt($tokens, $boundaries[ 0 ] + 1);
-            }
-
-            if ($this->countNewLines($tokens, $boundaries[ 1 ] - 1) > 1) {
-                $this->removeLineAt($tokens, $boundaries[ 1 ] - 1);
-            }
-
+        if ($boundaries === null) {
+            return;
         }
+
+        /**
+         * public function name()
+         * {
+         *   •
+         *   // body
+         *   •
+         * }
+         */
+        if ($this->countNewLines($tokens, $boundaries[ 0 ] + 1) > 1) {
+            $this->removeLineAt($tokens, $boundaries[ 0 ] + 1);
+        }
+
+        if ($this->countNewLines($tokens, $boundaries[ 1 ] - 1) > 1) {
+            $this->removeLineAt($tokens, $boundaries[ 1 ] - 1);
+        }
+
+        $this->removePaddingAfterFinalFunction($tokens, $boundaries[ 1 ]);
     }
 
     /**
      * @throws Exception
      */
-    private function fixBlock(Tokens $tokens, int $start): void
+    private function removePaddingAfterFinalFunction(Tokens $tokens, int $blockEndIndex): void
+    {
+        $next = $tokens->getNextNonWhitespace($blockEndIndex);
+
+        if ($next === null || $this->token($tokens, $next)->equals('}') === false) {
+            return;
+        }
+
+        $whitespaceIndex = $blockEndIndex + 1;
+
+        if ($this->token($tokens, $whitespaceIndex)->isWhitespace() === false
+            || $this->countNewLines($tokens, $whitespaceIndex) <= 1) {
+            return;
+        }
+
+        $this->removeLineAt($tokens, $whitespaceIndex);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function fixBlock(Tokens $tokens, int $start): ?int
     {
         [ $blockStartIndex, $blockEndIndex ] = $this->getBlockBoundaries($tokens, $start) ?? [ null, null ];
 
         if ($blockStartIndex === null || $blockEndIndex === null) {
-            return;
+            return null;
         }
 
         /**
@@ -134,7 +165,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
                 $this->unwrapNewLines($tokens, $blockStartIndex, $blockEndIndex);
 
-                return;
+                return $blockEndIndex;
 
             }
 
@@ -159,6 +190,43 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         if ($this->countNewLines($tokens, $blockEndIndex - 1) !== 2) {
             $this->ensureWhitespaceAtIndex($tokens, $blockEndIndex - 1);
         }
+
+        return $blockEndIndex;
+    }
+
+    private function ensureBlankLineAfterBlock(Tokens $tokens, int $start, int $blockEndIndex): void
+    {
+        $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($blockEndIndex);
+
+        if ($nextMeaningfulIndex === null) {
+            return;
+        }
+
+        $nextMeaningfulToken = $this->token($tokens, $nextMeaningfulIndex);
+
+        if ($nextMeaningfulToken->equals('}')
+            || $nextMeaningfulToken->isGivenKind([ T_ELSE, T_ELSEIF, T_CATCH, T_FINALLY ])
+            || ($this->token($tokens, $start)->isGivenKind(T_DO) && $nextMeaningfulToken->isGivenKind(T_WHILE))) {
+            return;
+        }
+
+        $whitespaceIndex = $blockEndIndex + 1;
+        $whitespaceToken = $this->token($tokens, $whitespaceIndex);
+
+        if ($whitespaceToken->isWhitespace() === false) {
+            return;
+        }
+
+        $missingNewLines = 2 - $this->countNewLines($tokens, $whitespaceIndex);
+
+        if ($missingNewLines <= 0) {
+            return;
+        }
+
+        $tokens[ $whitespaceIndex ] = new Token(
+            str_repeat($this->whitespacesConfig->getLineEnding(), $missingNewLines)
+            . $whitespaceToken->getContent(),
+        );
     }
 
     /**
@@ -257,24 +325,14 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
 
     private function getIndent(Tokens $tokens, int $index): string
     {
-        $lines = preg_split('~(\n\s+?)~', $this->token($tokens, $index)->getContent());
+        $content = $this->token($tokens, $index)->getContent();
+        $lastNewLine = strrpos($content, "\n");
 
-        if (count($lines) === 0 || !is_array($lines)) {
-            return $this->whitespacesConfig->getIndent();
+        if ($lastNewLine === false) {
+            return $content;
         }
 
-        while (isset($lines[ 0 ]) && $lines[ 0 ] === '') {
-            array_shift($lines);
-        }
-
-        if (empty($lines)) {
-            return $this->whitespacesConfig->getIndent();
-        }
-
-        return str_repeat(
-            string: $this->whitespacesConfig->getIndent(),
-            times: count(explode($this->whitespacesConfig->getIndent(), $lines[ 0 ])),
-        );
+        return substr($content, $lastNewLine + 1);
     }
 
     private function countNewLines(Tokens $tokens, int $index): int
@@ -282,7 +340,7 @@ final class PaddedBlockFixer extends AbstractFixer implements WhitespacesAwareFi
         $token = $this->token($tokens, $index);
 
         if ($token->isWhitespace()) {
-            return substr_count($token->getContent(), $this->whitespacesConfig->getLineEnding());
+            return substr_count($token->getContent(), "\n");
         }
 
         return 0;
