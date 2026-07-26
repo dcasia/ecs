@@ -37,11 +37,11 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
-    public function test_expands_functions_with_more_than_six_parameters(): void
+    public function test_compacts_functions_regardless_of_parameter_count(): void
     {
         $this->assertFixtureIsFixedTo(
-            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/many_parameters_unfixed.php',
-            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/many_parameters.php',
+            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/unlimited_parameters_unfixed.php',
+            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/unlimited_parameters_fixed.php',
         );
     }
 
