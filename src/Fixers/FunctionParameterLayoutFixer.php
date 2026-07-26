@@ -27,7 +27,7 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Constructors must use multiline parameters while short, simple named functions must use one line.',
+            summary: 'Promoted-property and empty-body constructors use multiline parameters while simple body constructors and short named functions use one line.',
             codeSamples: [
                 new CodeSample("<?php\n\nfinal class Example\n{\n    public function __construct(public readonly string \$name)\n    {\n    }\n\n    public static function create(\n        string \$name,\n    ): self\n    {\n    }\n}\n"),
             ],
@@ -71,6 +71,12 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
 
             if ($tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false)) {
 
+                if ($this->hasNonEmptyBody($tokens, $closeParenthesis)
+                    && $this->hasPromotedParameter($tokens, $openParenthesis, $closeParenthesis) === false
+                    && $this->compactFunctionParameters($tokens, $openParenthesis, $closeParenthesis)) {
+                    continue;
+                }
+
                 $this->expandConstructorParameters(
                     $tokens,
                     $index,
@@ -104,6 +110,44 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         }
 
         return $nameIndex;
+    }
+
+    private function hasNonEmptyBody(Tokens $tokens, int $closeParenthesis): bool
+    {
+        $openBrace = $tokens->getNextTokenOfKind($closeParenthesis, [ '{', ';' ]);
+
+        if ($openBrace === null || $tokens[ $openBrace ]->equals('{') === false) {
+            return false;
+        }
+
+        $closeBrace = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $openBrace);
+        $firstBodyToken = $tokens->getNextMeaningfulToken($openBrace);
+
+        return $firstBodyToken !== null && $firstBodyToken !== $closeBrace;
+    }
+
+    private function hasPromotedParameter(Tokens $tokens, int $openParenthesis, int $closeParenthesis): bool
+    {
+        for ($index = $openParenthesis + 1; $index < $closeParenthesis; $index++) {
+
+            $token = $tokens[ $index ];
+            $block = Tokens::detectBlockType($token);
+
+            if ($block !== null && $block[ 'isStart' ]) {
+
+                $index = $tokens->findBlockEnd($block[ 'type' ], $index);
+
+                continue;
+
+            }
+
+            if ($token->isGivenKind([ T_PUBLIC, T_PROTECTED, T_PRIVATE, T_READONLY ])) {
+                return true;
+            }
+
+        }
+
+        return false;
     }
 
     private function expandConstructorParameters(
@@ -177,12 +221,12 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         $tokens->insertAt($whitespaceIndex, new Token([ T_WHITESPACE, $content ]));
     }
 
-    private function compactFunctionParameters(Tokens $tokens, int $openParenthesis, int $closeParenthesis): void
+    private function compactFunctionParameters(Tokens $tokens, int $openParenthesis, int $closeParenthesis): bool
     {
         $layout = $this->inspectSimpleParameters($tokens, $openParenthesis, $closeParenthesis);
 
         if ($layout === null || $layout[ 'parameters' ] > self::MAXIMUM_INLINE_PARAMETERS) {
-            return;
+            return false;
         }
 
         $compactedParameterLength = $this->getCompactedParameterLength(
@@ -196,7 +240,7 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
             + $this->getLineLengthFrom($tokens, $closeParenthesis);
 
         if ($signatureLength > self::MAXIMUM_LINE_LENGTH) {
-            return;
+            return false;
         }
 
         for ($index = count($layout[ 'whitespace' ]) - 1; $index >= 0; $index--) {
@@ -226,6 +270,8 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         if ($trailingComma !== null && $tokens[ $trailingComma ]->equals(',')) {
             $tokens->clearAt($trailingComma);
         }
+
+        return true;
     }
 
     /**
@@ -283,10 +329,6 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
 
             $hasParameter = true;
 
-        }
-
-        if ($whitespace === []) {
-            return null;
         }
 
         $lastParameterToken = $tokens->getPrevMeaningfulToken($closeParenthesis);

@@ -21,6 +21,14 @@ final class FunctionParameterLayoutFixerTest extends EcsTestCase
         );
     }
 
+    public function test_compacts_simple_body_constructors_without_promoted_properties(): void
+    {
+        $this->assertFixtureIsFixedTo(
+            inputFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/body_constructor_unfixed.php',
+            expectedFixture: __DIR__ . '/../Fixtures/FunctionParameterLayout/body_constructor_fixed.php',
+        );
+    }
+
     public function test_keeps_functions_with_many_parameters_expanded(): void
     {
         $this->assertFixturePasses(
