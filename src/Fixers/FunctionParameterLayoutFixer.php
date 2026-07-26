@@ -23,7 +23,7 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Simple named function parameters always use one line; empty-body constructors with parameters use multiline parameters.',
+            summary: 'Simple named function parameters always use one line; constructors use multiline parameters unless they have exactly one parameter and a non-empty body.',
             codeSamples: [
                 new CodeSample("<?php\n\nfinal class Example\n{\n    public function __construct(public readonly string \$name)\n    {\n    }\n\n    public static function create(\n        string \$name,\n    ): self\n    {\n    }\n}\n"),
             ],
@@ -68,7 +68,9 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
             $whitespace = $this->inspectSimpleParameters($tokens, $openParenthesis, $closeParenthesis);
             $isConstructor = $tokens[ $nameIndex ]->equals([ T_STRING, self::CONSTRUCTOR_NAME ], false);
             $shouldCompact = $whitespace !== null
-                && ($isConstructor === false || $this->hasNonEmptyBody($tokens, $closeParenthesis));
+                && ($isConstructor === false
+                    || ($this->countParameters($tokens, $openParenthesis, $closeParenthesis) === 1
+                        && $this->hasNonEmptyBody($tokens, $closeParenthesis)));
 
             if ($shouldCompact) {
 
@@ -121,6 +123,21 @@ final class FunctionParameterLayoutFixer extends AbstractFixer implements Whites
         $firstBodyToken = $tokens->getNextMeaningfulToken($openBrace);
 
         return $firstBodyToken !== null && $firstBodyToken !== $closeBrace;
+    }
+
+    private function countParameters(Tokens $tokens, int $openParenthesis, int $closeParenthesis): int
+    {
+        $firstParameter = $tokens->getNextMeaningfulToken($openParenthesis);
+
+        if ($firstParameter === null || $firstParameter === $closeParenthesis) {
+            return 0;
+        }
+
+        $commas = $this->findTopLevelCommas($tokens, $openParenthesis, $closeParenthesis);
+        $lastParameterToken = $tokens->getPrevMeaningfulToken($closeParenthesis);
+        $hasTrailingComma = $lastParameterToken !== null && $tokens[ $lastParameterToken ]->equals(',');
+
+        return count($commas) + ($hasTrailingComma ? 0 : 1);
     }
 
     private function placeOpeningBraceOnOwnLine(Tokens $tokens, int $functionIndex, int $closeParenthesis): void
