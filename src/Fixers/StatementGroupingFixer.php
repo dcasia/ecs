@@ -238,10 +238,24 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
         $hasUnionType = false;
         $hasIntersectionType = false;
         $typeParts = [];
+        $scopeDepth = 0;
 
         for ($index = $start; $index < $end; $index++) {
 
             $token = $tokens[ $index ];
+            $block = Tokens::detectBlockType($token);
+
+            if ($block !== null && $this->isExpressionBlock($block[ 'type' ]) === false) {
+
+                $scopeDepth += $block[ 'isStart' ] ? 1 : -1;
+
+                continue;
+
+            }
+
+            if ($scopeDepth > 0) {
+                continue;
+            }
 
             if ($token->isGivenKind([ T_FUNCTION, T_CONST ])) {
                 return null;
@@ -266,8 +280,6 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
             if ($token->isGivenKind([ T_READONLY, T_FINAL ]) || $token->isWhitespace() || $token->isComment()) {
                 continue;
             }
-
-            $block = Tokens::detectBlockType($token);
 
             if ($block !== null && $block[ 'isStart' ] && $block[ 'type' ] === Tokens::BLOCK_TYPE_ATTRIBUTE) {
 

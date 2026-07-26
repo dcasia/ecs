@@ -57,4 +57,11 @@ final class StatementGroupingFixerTest extends EcsTestCase
             $fixtureDirectory . '/After/AdditiveGrouping.php',
         );
     }
+
+    public function test_does_not_group_anonymous_class_members_with_the_outer_statement(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/StatementGroupingFixer/AnonymousMigration.php',
+        );
+    }
 }
