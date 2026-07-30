@@ -8,13 +8,14 @@ use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
 use DigitalCreative\ECS\Fixers\FunctionParameterLayoutFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
+use DigitalCreative\ECS\Fixers\MultilineNamedArgumentsFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
 use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
 
-return register_fixers([
+return register_fixers(fixers: [
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
     PaddedMultilineStatementFixer::class => true,
@@ -22,6 +23,7 @@ return register_fixers([
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
+    MultilineNamedArgumentsFixer::class => true,
     RequireParameterTypeSniff::class => true,
     LaravelEmptyToBlankFixer::class => true,
 ])->withSets([
