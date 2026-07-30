@@ -50,7 +50,7 @@ return register_fixers([
     PhpdocAnnotationWithoutDotFixer::class => false,
     PhpdocIndentFixer::class => true,
     PhpdocInlineTagNormalizerFixer::class => true,
-    PhpdocLineSpanFixer::class => true,
+    PhpdocLineSpanFixer::class => [ 'other' => 'multi' ],
     PhpdocNoAccessFixer::class => true,
     PhpdocNoAliasTagFixer::class => true,
     PhpdocNoEmptyReturnFixer::class => true,
