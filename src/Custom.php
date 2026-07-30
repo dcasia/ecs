@@ -12,6 +12,7 @@ use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
 use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
+use DigitalCreative\ECS\Fixers\TraitUseSpacingFixer;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
 
 return register_fixers([
@@ -19,6 +20,7 @@ return register_fixers([
     PaddedBlockFixer::class => true,
     PaddedMultilineStatementFixer::class => true,
     StatementGroupingFixer::class => true,
+    TraitUseSpacingFixer::class => true,
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
