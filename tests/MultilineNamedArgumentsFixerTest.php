@@ -35,6 +35,13 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_inline_first_and_single_argument_calls_are_left_unchanged(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/PartiallyMultilineCalls.php',
+        );
+    }
+
     public function test_unresolvable_variadic_and_unpacked_calls_are_left_unchanged(): void
     {
         $this->assertFixturePasses(

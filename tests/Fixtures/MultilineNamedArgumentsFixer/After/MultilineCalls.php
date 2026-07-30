@@ -56,7 +56,7 @@ final class MultilineCalls extends TestCase
             flags: JSON_THROW_ON_ERROR,
         );
 
-        $handler = $this->beforePaymentHandler(submission: $submission, exception: new DisqualifiedException(
+        $handler = $this->beforePaymentHandler($submission, new DisqualifiedException(
             gate: 'state',
             displayName: 'State',
             message: 'Not eligible.',

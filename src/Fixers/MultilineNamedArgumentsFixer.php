@@ -50,7 +50,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            summary: 'Arguments in multiline calls are named when the callable parameter names can be resolved safely.',
+            summary: 'Arguments in expanded multiline calls are named when there are at least two arguments and the callable parameter names can be resolved safely.',
             codeSamples: [
                 new CodeSample("<?php\n\njson_decode(\n    \$json,\n    true,\n    flags: JSON_THROW_ON_ERROR,\n);\n"),
             ],
@@ -106,7 +106,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
             $arguments = $this->inspectArguments($tokens, $openParenthesis, $closeParenthesis);
 
-            if ($arguments === [] || $this->hasPositionalArgument($arguments) === false) {
+            if ($this->hasExpandedArgumentList($tokens, $openParenthesis, $arguments) === false
+                || $this->hasPositionalArgument($arguments) === false) {
                 continue;
             }
 
@@ -609,6 +610,21 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $commas;
+    }
+
+    /**
+     * @param list<array{start: int, end: int, name: string|null, unpacked: bool}> $arguments
+     */
+    private function hasExpandedArgumentList(Tokens $tokens, int $openParenthesis, array $arguments): bool
+    {
+        if (count($arguments) < 2) {
+            return false;
+        }
+
+        return $tokens->isPartialCodeMultiline(
+            $openParenthesis,
+            $arguments[ 0 ][ 'start' ] - 1,
+        );
     }
 
     /**
