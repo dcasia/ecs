@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace DigitalCreative\ECS;
 
+use DigitalCreative\ECS\Fixers\AutoImportClassesFixer;
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
 use DigitalCreative\ECS\Fixers\FunctionParameterLayoutFixer;
@@ -17,6 +18,7 @@ use DigitalCreative\ECS\Fixers\TraitUseSpacingFixer;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
 
 return register_fixers(fixers: [
+    AutoImportClassesFixer::class => true,
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
     PaddedMultilineStatementFixer::class => true,
