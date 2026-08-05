@@ -6,6 +6,7 @@ namespace DigitalCreative\ECS;
 
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
+use DigitalCreative\ECS\Fixers\DescriptiveVariableNameFixer;
 use DigitalCreative\ECS\Fixers\FunctionParameterLayoutFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
@@ -21,6 +22,7 @@ return register_fixers([
     StatementGroupingFixer::class => true,
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
+    DescriptiveVariableNameFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
     RequireParameterTypeSniff::class => true,
     LaravelEmptyToBlankFixer::class => true,
