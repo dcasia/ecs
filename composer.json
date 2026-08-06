@@ -3,6 +3,7 @@
     "description": "Standard code style configuration",
     "require": {
         "php": ">=8.4",
+        "nikic/php-parser": "^5.6",
         "symplify/easy-coding-standard": "^13.0.4"
     },
     "require-dev": {

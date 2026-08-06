@@ -7,6 +7,7 @@ namespace DigitalCreative\ECS;
 use DigitalCreative\ECS\Fixers\AutoImportClassesFixer;
 use DigitalCreative\ECS\Fixers\ClassOpeningBracketFixer;
 use DigitalCreative\ECS\Fixers\ConstructorBracesFixer;
+use DigitalCreative\ECS\Fixers\DescriptiveVariableNameFixer;
 use DigitalCreative\ECS\Fixers\FunctionParameterLayoutFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\MultilineNamedArgumentsFixer;
@@ -26,6 +27,7 @@ return register_fixers(fixers: [
     TraitUseSpacingFixer::class => true,
     ClassOpeningBracketFixer::class => true,
     ConstructorBracesFixer::class => true,
+    DescriptiveVariableNameFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
     MultilineNamedArgumentsFixer::class => true,
     RequireParameterTypeSniff::class => true,
