@@ -12,6 +12,8 @@ use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use ReflectionClass;
 use ReflectionFunction;
+use ReflectionMethod;
+use ReflectionNamedType;
 use ReflectionParameter;
 use SplFileInfo;
 use Throwable;
@@ -37,7 +39,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      *     name: string|null,
      *     rawParent: string|null,
      *     parent: string|null,
-     *     methods: array<string, list<array{name: string, variadic: bool}>>
+     *     methods: array<string, list<array{name: string, variadic: bool}>>,
+     *     methodReturnTypes: array<string, string|null>
      * }>
      */
     private array $classes = [];
@@ -223,7 +226,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      *     name: string|null,
      *     rawParent: string|null,
      *     parent: string|null,
-     *     methods: array<string, list<array{name: string, variadic: bool}>>
+     *     methods: array<string, list<array{name: string, variadic: bool}>>,
+     *     methodReturnTypes: array<string, string|null>
      * }>
      */
     private function collectClassScopes(Tokens $tokens): array
@@ -279,6 +283,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 'rawParent' => $rawParent,
                 'parent' => null,
                 'methods' => [],
+                'methodReturnTypes' => [],
             ];
 
         }
@@ -440,11 +445,18 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 continue;
             }
 
+            $closeParenthesis = $tokens->findBlockEnd(
+                Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                $openParenthesis,
+            );
+
             $parameters = $this->readDeclaredParameters(
                 tokens: $tokens,
                 openParenthesis: $openParenthesis,
-                closeParenthesis: $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openParenthesis),
+                closeParenthesis: $closeParenthesis,
             );
+
+            $returnType = $this->readDeclaredReturnType($tokens, $closeParenthesis);
 
             $name = strtolower($tokens[ $nameIndex ]->getContent());
             $classIndex = $this->findContainingClass($index);
@@ -452,6 +464,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             if ($classIndex !== null) {
 
                 $this->classes[ $classIndex ][ 'methods' ][ $name ] = $parameters;
+                $this->classes[ $classIndex ][ 'methodReturnTypes' ][ $name ] = $returnType;
 
                 continue;
 
@@ -520,6 +533,33 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $parameters;
+    }
+
+    private function readDeclaredReturnType(Tokens $tokens, int $closeParenthesis): ?string
+    {
+        $colon = $tokens->getNextMeaningfulToken($closeParenthesis);
+
+        if ($colon === null || $tokens[ $colon ]->getContent() !== ':') {
+            return null;
+        }
+
+        $typeIndex = $tokens->getNextMeaningfulToken($colon);
+
+        if ($typeIndex !== null && $tokens[ $typeIndex ]->getContent() === '?') {
+            $typeIndex = $tokens->getNextMeaningfulToken($typeIndex);
+        }
+
+        if ($typeIndex === null || $this->isNameToken($tokens[ $typeIndex ]) === false) {
+            return null;
+        }
+
+        $afterType = $tokens->getNextMeaningfulToken($typeIndex);
+
+        if ($afterType !== null && in_array($tokens[ $afterType ]->getContent(), [ '|', '&' ], true)) {
+            return null;
+        }
+
+        return $tokens[ $typeIndex ]->getContent();
     }
 
     /**
@@ -790,45 +830,175 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         }
 
+        $className = $this->resolveReceiverClass($tokens, $receiver, $position, $classIndex);
+
+        return $className === null ? null : $this->resolveMethod($className, $method);
+    }
+
+    private function resolveReceiverClass(Tokens $tokens, int $receiver, int $position, ?int $classIndex): ?string
+    {
+        if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)) {
+
+            if ($tokens[ $receiver ]->getContent() !== '$this' || $classIndex === null) {
+                return null;
+            }
+
+            return $this->classes[ $classIndex ][ 'name' ];
+
+        }
+
+        if ($this->isNameToken($tokens[ $receiver ])) {
+            return $this->resolvePropertyReceiverClass($tokens, $receiver, $classIndex);
+        }
+
         if ($tokens[ $receiver ]->equals(')') === false) {
             return null;
         }
 
-        $constructorParenthesis = $tokens->findBlockStart(
+        $callParenthesis = $tokens->findBlockStart(
             Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
             $receiver,
         );
 
-        $classNameIndex = $tokens->getPrevMeaningfulToken($constructorParenthesis);
+        $nameIndex = $tokens->getPrevMeaningfulToken($callParenthesis);
 
-        if ($classNameIndex === null || $this->isNameToken($tokens[ $classNameIndex ]) === false) {
+        if ($nameIndex === null || $this->isNameToken($tokens[ $nameIndex ]) === false) {
             return null;
         }
 
-        $classIdentifier = $this->readQualifiedNameEndingAt($tokens, $classNameIndex);
-        $newIndex = $tokens->getPrevMeaningfulToken($classIdentifier[ 'start' ]);
+        $callable = $this->readQualifiedNameEndingAt($tokens, $nameIndex);
+        $beforeName = $tokens->getPrevMeaningfulToken($callable[ 'start' ]);
 
-        if ($newIndex === null || $tokens[ $newIndex ]->isGivenKind(T_NEW) === false) {
+        if ($beforeName !== null && $tokens[ $beforeName ]->isGivenKind(T_NEW)) {
+            return $this->resolveClassReference($callable[ 'name' ], $position, $classIndex);
+        }
+
+        if ($beforeName !== null && $tokens[ $beforeName ]->isGivenKind(T_DOUBLE_COLON)) {
+
+            $ownerIndex = $tokens->getPrevMeaningfulToken($beforeName);
+
+            if ($ownerIndex === null || $this->isNameToken($tokens[ $ownerIndex ]) === false) {
+                return null;
+            }
+
+            $owner = $this->readQualifiedNameEndingAt($tokens, $ownerIndex);
+            $ownerClass = $this->resolveClassReference($owner[ 'name' ], $position, $classIndex);
+
+            return $ownerClass === null
+                ? null
+                : $this->resolveMethodReturnClass($ownerClass, $callable[ 'name' ]);
+
+        }
+
+        if ($beforeName === null
+            || $tokens[ $beforeName ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]) === false) {
             return null;
         }
 
-        $normalizedIdentifier = strtolower($classIdentifier[ 'name' ]);
+        $innerReceiver = $tokens->getPrevMeaningfulToken($beforeName);
+
+        if ($innerReceiver === null) {
+            return null;
+        }
+
+        $ownerClass = $this->resolveReceiverClass($tokens, $innerReceiver, $position, $classIndex);
+
+        return $ownerClass === null
+            ? null
+            : $this->resolveMethodReturnClass($ownerClass, $callable[ 'name' ]);
+    }
+
+    private function resolvePropertyReceiverClass(Tokens $tokens, int $property, ?int $classIndex): ?string
+    {
+        if ($classIndex === null) {
+            return null;
+        }
+
+        $operator = $tokens->getPrevMeaningfulToken($property);
+        $owner = $operator === null ? null : $tokens->getPrevMeaningfulToken($operator);
+
+        if ($operator === null
+            || $tokens[ $operator ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]) === false
+            || $owner === null
+            || $tokens[ $owner ]->isGivenKind(T_VARIABLE) === false
+            || $tokens[ $owner ]->getContent() !== '$this') {
+            return null;
+        }
+
+        return $this->resolveSourcePropertyClass(
+            tokens: $tokens,
+            classIndex: $classIndex,
+            property: $tokens[ $property ]->getContent(),
+        );
+    }
+
+    private function resolveSourcePropertyClass(Tokens $tokens, int $classIndex, string $property): ?string
+    {
+        $expectedVariable = sprintf('$%s', $property);
+
+        for ($index = $this->classes[ $classIndex ][ 'start' ] + 1;
+            $index < $this->classes[ $classIndex ][ 'end' ];
+            $index++) {
+
+            if ($tokens[ $index ]->isGivenKind(T_VARIABLE) === false
+                || $tokens[ $index ]->getContent() !== $expectedVariable) {
+                continue;
+            }
+
+            $typeIndex = $tokens->getPrevMeaningfulToken($index);
+
+            if ($typeIndex === null || $this->isNameToken($tokens[ $typeIndex ]) === false) {
+                continue;
+            }
+
+            $hasVisibility = false;
+            $ambiguousType = false;
+            $cursor = $typeIndex;
+
+            while (($cursor = $tokens->getPrevMeaningfulToken($cursor)) !== null) {
+
+                if ($tokens[ $cursor ]->equalsAny([ ';', '{', '}', '(', ',' ])) {
+                    break;
+                }
+
+                if (in_array($tokens[ $cursor ]->getContent(), [ 'public', 'protected', 'private' ], true)) {
+                    $hasVisibility = true;
+                }
+
+                if (in_array($tokens[ $cursor ]->getContent(), [ '|', '&' ], true)) {
+                    $ambiguousType = true;
+                }
+
+            }
+
+            if ($hasVisibility === false || $ambiguousType) {
+                continue;
+            }
+
+            return $this->resolveClassReference(
+                identifier: $tokens[ $typeIndex ]->getContent(),
+                position: $index,
+                classIndex: $classIndex,
+            );
+
+        }
+
+        return null;
+    }
+
+    private function resolveClassReference(string $identifier, int $position, ?int $classIndex): ?string
+    {
+        $normalizedIdentifier = strtolower($identifier);
 
         if (($normalizedIdentifier === 'self' || $normalizedIdentifier === 'static') && $classIndex !== null) {
-            return $this->resolveSourceMethod($classIndex, $method);
+            return $this->classes[ $classIndex ][ 'name' ];
         }
 
         if ($normalizedIdentifier === 'parent' && $classIndex !== null) {
-
-            $parent = $this->classes[ $classIndex ][ 'parent' ];
-
-            return $parent === null ? null : $this->resolveMethod($parent, $method);
-
+            return $this->classes[ $classIndex ][ 'parent' ];
         }
 
-        $className = $this->resolveClassIdentifier($classIdentifier[ 'name' ], $position);
-
-        return $className === null ? null : $this->resolveMethod($className, $method);
+        return $this->resolveClassIdentifier($identifier, $position);
     }
 
     /**
@@ -911,6 +1081,48 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         return $parent === null ? null : $this->resolveMethod($parent, $method, $visited);
     }
 
+    private function resolveSourceMethodReturnClass(int $classIndex, string $method, array $visited = []): ?string
+    {
+        if (isset($visited[ $classIndex ])) {
+            return null;
+        }
+
+        $visited[ $classIndex ] = true;
+        $methodName = strtolower($method);
+        $parameters = $this->classes[ $classIndex ][ 'methods' ][ $methodName ] ?? null;
+
+        if ($parameters !== null) {
+
+            $returnType = $this->classes[ $classIndex ][ 'methodReturnTypes' ][ $methodName ] ?? null;
+
+            return $returnType === null
+                ? null
+                : $this->resolveClassReference(
+                    identifier: $returnType,
+                    position: $this->classes[ $classIndex ][ 'start' ],
+                    classIndex: $classIndex,
+                );
+
+        }
+
+        $parent = $this->classes[ $classIndex ][ 'parent' ];
+
+        return $parent === null ? null : $this->resolveMethodReturnClass($parent, $method, $visited);
+    }
+
+    private function resolveMethodReturnClass(string $className, string $method, array $visited = []): ?string
+    {
+        $sourceClass = $this->findSourceClass($className);
+
+        if ($sourceClass !== null) {
+            return $this->resolveSourceMethodReturnClass($sourceClass, $method, $visited);
+        }
+
+        $reflectionMethod = $this->reflectMethod($className, $method);
+
+        return $reflectionMethod === null ? null : $this->resolveReflectedMethodReturnClass($reflectionMethod);
+    }
+
     /**
      * @return list<array{name: string, variadic: bool}>|null
      */
@@ -922,25 +1134,177 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             return $this->resolveSourceMethod($sourceClass, $method, $visited);
         }
 
+        $reflectionMethod = $this->reflectMethod($className, $method);
+
+        return $reflectionMethod === null
+            ? null
+            : $this->reflectionParameters($reflectionMethod->getParameters());
+    }
+
+    private function reflectMethod(string $className, string $method): ?ReflectionMethod
+    {
         try {
 
             if (class_exists($className) === false && interface_exists($className) === false && trait_exists($className) === false) {
                 return null;
             }
 
-            $reflection = new ReflectionClass($className);
-
-            if ($reflection->hasMethod($method) === false) {
-                return null;
-            }
-
-            return $this->reflectionParameters($reflection->getMethod($method)->getParameters());
+            return $this->findReflectionMethod(new ReflectionClass($className), $method);
 
         } catch (Throwable) {
 
             return null;
 
         }
+    }
+
+    private function findReflectionMethod(ReflectionClass $class, string $method, array $visited = []): ?ReflectionMethod
+    {
+        $className = strtolower($class->getName());
+
+        if (isset($visited[ $className ])) {
+            return null;
+        }
+
+        $visited[ $className ] = true;
+
+        if ($class->hasMethod($method)) {
+            return $class->getMethod($method);
+        }
+
+        foreach ($this->reflectionMixinClassNames($class) as $mixinClassName) {
+
+            if (class_exists($mixinClassName) === false && interface_exists($mixinClassName) === false) {
+                continue;
+            }
+
+            $reflectionMethod = $this->findReflectionMethod(
+                class: new ReflectionClass($mixinClassName),
+                method: $method,
+                visited: $visited,
+            );
+
+            if ($reflectionMethod !== null) {
+                return $reflectionMethod;
+            }
+
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function reflectionMixinClassNames(ReflectionClass $class): array
+    {
+        $docComment = $class->getDocComment();
+
+        if ($docComment === false
+            || preg_match_all('/@mixin\s+([^\s]+)/', $docComment, $matches) < 1) {
+            return [];
+        }
+
+        $classNames = [];
+
+        foreach ($matches[ 1 ] as $type) {
+
+            $type = preg_replace('/<.*>$/', '', $type) ?? $type;
+
+            if (str_starts_with($type, '\\')) {
+
+                $classNames[] = ltrim($type, '\\');
+
+                continue;
+
+            }
+
+            $classNames[] = $this->qualifyName($class->getNamespaceName(), $type);
+
+        }
+
+        return $classNames;
+    }
+
+    private function resolveReflectedMethodReturnClass(ReflectionMethod $method): ?string
+    {
+        $returnType = $method->getReturnType();
+        $declaringClass = $method->getDeclaringClass();
+
+        if ($returnType instanceof ReflectionNamedType) {
+
+            if ($returnType->isBuiltin()) {
+                return null;
+            }
+
+            return $this->resolveReflectedTypeName($returnType->getName(), $declaringClass);
+
+        }
+
+        if ($returnType !== null) {
+            return null;
+        }
+
+        $docComment = $method->getDocComment();
+
+        if ($docComment === false
+            || preg_match('/@return\s+([^\s]+)/', $docComment, $matches) !== 1) {
+            return null;
+        }
+
+        return $this->resolveReflectedTypeName($matches[ 1 ], $declaringClass);
+    }
+
+    private function resolveReflectedTypeName(string $type, ReflectionClass $declaringClass): ?string
+    {
+        $type = ltrim(trim($type), '?');
+        $type = preg_replace('/<.*>$/', '', $type) ?? $type;
+        $types = array_values(array_filter(
+            array: explode('|', $type),
+            callback: static fn (string $candidate): bool => strtolower($candidate) !== 'null',
+        ));
+
+        if (count($types) !== 1 || str_contains($types[ 0 ], '&')) {
+            return null;
+        }
+
+        $type = $types[ 0 ];
+        $normalizedType = strtolower($type);
+
+        if (in_array($normalizedType, [ '$this', 'self', 'static' ], true)) {
+            return $declaringClass->getName();
+        }
+
+        if ($normalizedType === 'parent') {
+
+            $parent = $declaringClass->getParentClass();
+
+            return $parent === false ? null : $parent->getName();
+
+        }
+
+        if (in_array($normalizedType, [
+            'array',
+            'bool',
+            'callable',
+            'false',
+            'float',
+            'int',
+            'iterable',
+            'mixed',
+            'never',
+            'null',
+            'object',
+            'string',
+            'true',
+            'void',
+        ], true)) {
+            return null;
+        }
+
+        return str_starts_with($type, '\\')
+            ? ltrim($type, '\\')
+            : $this->qualifyName($declaringClass->getNamespaceName(), $type);
     }
 
     /**
