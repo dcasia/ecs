@@ -13,8 +13,18 @@ final class StatementGroupingFixerTest extends EcsTestCase
         $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
 
         $this->assertFixtureIsFixedTo(
-            $fixtureDirectory . '/Before/OrderWorkflow.php',
-            $fixtureDirectory . '/After/OrderWorkflow.php',
+            inputFixture: $fixtureDirectory . '/Before/OrderWorkflow.php',
+            expectedFixture: $fixtureDirectory . '/After/OrderWorkflow.php',
+        );
+    }
+
+    public function test_groups_new_object_calls_inside_pest_closures(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/PestValidation.php',
+            expectedFixture: $fixtureDirectory . '/After/PestValidation.php',
         );
     }
 
@@ -23,8 +33,8 @@ final class StatementGroupingFixerTest extends EcsTestCase
         $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
 
         $this->assertFixtureIsFixedTo(
-            $fixtureDirectory . '/Before/CampaignWorkflow.php',
-            $fixtureDirectory . '/After/CampaignWorkflow.php',
+            inputFixture: $fixtureDirectory . '/Before/CampaignWorkflow.php',
+            expectedFixture: $fixtureDirectory . '/After/CampaignWorkflow.php',
         );
     }
 
@@ -33,8 +43,8 @@ final class StatementGroupingFixerTest extends EcsTestCase
         $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
 
         $this->assertFixtureIsFixedTo(
-            $fixtureDirectory . '/Before/MultilineWorkflow.php',
-            $fixtureDirectory . '/After/MultilineWorkflow.php',
+            inputFixture: $fixtureDirectory . '/Before/MultilineWorkflow.php',
+            expectedFixture: $fixtureDirectory . '/After/MultilineWorkflow.php',
         );
     }
 
@@ -43,8 +53,8 @@ final class StatementGroupingFixerTest extends EcsTestCase
         $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
 
         $this->assertFixtureIsFixedTo(
-            $fixtureDirectory . '/Before/AssignmentAndProperties.php',
-            $fixtureDirectory . '/After/AssignmentAndProperties.php',
+            inputFixture: $fixtureDirectory . '/Before/AssignmentAndProperties.php',
+            expectedFixture: $fixtureDirectory . '/After/AssignmentAndProperties.php',
         );
     }
 
@@ -53,8 +63,8 @@ final class StatementGroupingFixerTest extends EcsTestCase
         $fixtureDirectory = __DIR__ . '/Fixtures/StatementGroupingFixer';
 
         $this->assertFixtureIsFixedTo(
-            $fixtureDirectory . '/Before/AdditiveGrouping.php',
-            $fixtureDirectory . '/After/AdditiveGrouping.php',
+            inputFixture: $fixtureDirectory . '/Before/AdditiveGrouping.php',
+            expectedFixture: $fixtureDirectory . '/After/AdditiveGrouping.php',
         );
     }
 

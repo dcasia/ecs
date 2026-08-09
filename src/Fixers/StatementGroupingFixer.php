@@ -20,8 +20,8 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Adds blank lines between adjacent expression statements with different receivers or call types without removing existing separation.',
-            [],
+            summary: 'Adds blank lines between adjacent expression statements with different receivers or call types without removing existing separation.',
+            codeSamples: [],
         );
     }
 
@@ -38,11 +38,26 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
         $statements = $this->findGroupableStatements($tokens);
+        $previousByScope = [];
+        $statementPairs = [];
 
-        for ($index = count($statements) - 1; $index > 0; $index--) {
+        foreach ($statements as $statement) {
 
-            $previous = $statements[ $index - 1 ];
-            $current = $statements[ $index ];
+            $scope = $statement[ 'scope' ];
+            $previous = $previousByScope[ $scope ] ?? null;
+
+            if ($previous !== null) {
+                $statementPairs[] = [ 'previous' => $previous, 'current' => $statement ];
+            }
+
+            $previousByScope[ $scope ] = $statement;
+
+        }
+
+        for ($index = count($statementPairs) - 1; $index >= 0; $index--) {
+
+            $previous = $statementPairs[ $index ][ 'previous' ];
+            $current = $statementPairs[ $index ][ 'current' ];
 
             if ($this->containsOnlyWhitespace($tokens, $previous[ 'end' ], $current[ 'start' ]) === false) {
                 continue;
@@ -53,29 +68,52 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
             }
 
             $this->ensureBlankLineBetween(
-                $tokens,
-                $previous[ 'end' ],
-                $current[ 'start' ],
+                tokens: $tokens,
+                previousEnd: $previous[ 'end' ],
+                currentStart: $current[ 'start' ],
             );
 
         }
     }
 
     /**
-     * @return list<array{start: int, end: int, kind: string, receiver: ?string, multiline: bool}>
+     * @return list<array{start: int, end: int, kind: string, receiver: ?string, multiline: bool, scope: int}>
      */
     private function findGroupableStatements(Tokens $tokens): array
     {
         $statements = [];
         $nestedExpressionDepth = 0;
+        $enclosingExpressionDepths = [];
+        $scopeStack = [ 0 ];
+        $nextScope = 1;
 
         foreach ($tokens as $index => $token) {
 
             $block = Tokens::detectBlockType($token);
 
-            if ($block !== null && $this->isExpressionBlock($block[ 'type' ])) {
+            if ($block !== null) {
 
-                $nestedExpressionDepth += $block[ 'isStart' ] ? 1 : -1;
+                if ($this->isExpressionBlock($block[ 'type' ])) {
+
+                    $nestedExpressionDepth += $block[ 'isStart' ] ? 1 : -1;
+
+                    continue;
+
+                }
+
+                if ($block[ 'isStart' ]) {
+
+                    $enclosingExpressionDepths[] = $nestedExpressionDepth;
+                    $nestedExpressionDepth = 0;
+                    $scopeStack[] = $nextScope++;
+
+                } else {
+
+                    $nestedExpressionDepth = array_pop($enclosingExpressionDepths) ?? 0;
+
+                    array_pop($scopeStack);
+
+                }
 
                 continue;
 
@@ -103,6 +141,7 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
                 'kind' => $group[ 'kind' ],
                 'receiver' => $group[ 'receiver' ],
                 'multiline' => $tokens->isPartialCodeMultiline($start, $index),
+                'scope' => $scopeStack[ count($scopeStack) - 1 ],
             ];
 
         }
@@ -208,6 +247,23 @@ final class StatementGroupingFixer extends AbstractFixer implements WhitespacesA
 
         if ($next === null) {
             return null;
+        }
+
+        if ($token->isGivenKind(T_NEW)) {
+
+            $className = $tokens[ $next ]->isGivenKind([
+                T_STRING,
+                T_NAME_QUALIFIED,
+                T_NAME_FULLY_QUALIFIED,
+                T_NAME_RELATIVE,
+                T_STATIC,
+            ]) ? $tokens[ $next ]->getContent() : null;
+
+            return [
+                'kind' => 'new-object-call',
+                'receiver' => $className,
+            ];
+
         }
 
         if ($tokens[ $next ]->isGivenKind(T_DOUBLE_COLON)) {
