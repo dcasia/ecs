@@ -16,6 +16,7 @@ use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
 use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
 use DigitalCreative\ECS\Fixers\TraitUseSpacingFixer;
+use DigitalCreative\ECS\Sniffs\ForbidSwitchStatementSniff;
 use DigitalCreative\ECS\Sniffs\RequireParameterTypeSniff;
 
 return register_fixers(fixers: [
@@ -30,6 +31,7 @@ return register_fixers(fixers: [
     DescriptiveVariableNameFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
     MultilineNamedArgumentsFixer::class => true,
+    ForbidSwitchStatementSniff::class => true,
     RequireParameterTypeSniff::class => true,
     LaravelEmptyToBlankFixer::class => true,
 ])->withSets([
