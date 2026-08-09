@@ -713,14 +713,9 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
             $receiver = $tokens->getPrevMeaningfulToken($beforeName);
 
-            if ($receiver === null
-                || $tokens[ $receiver ]->isGivenKind(T_VARIABLE) === false
-                || $tokens[ $receiver ]->getContent() !== '$this'
-                || $classIndex === null) {
-                return null;
-            }
-
-            return $this->resolveSourceMethod($classIndex, $name);
+            return $receiver === null
+                ? null
+                : $this->resolveObjectMethod($tokens, $receiver, $openParenthesis, $classIndex, $name);
 
         }
 
@@ -778,6 +773,62 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $this->resolveFunction($name, $openParenthesis);
+    }
+
+    /**
+     * @return list<array{name: string, variadic: bool}>|null
+     */
+    private function resolveObjectMethod(Tokens $tokens, int $receiver, int $position, ?int $classIndex, string $method): ?array
+    {
+        if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)) {
+
+            if ($tokens[ $receiver ]->getContent() !== '$this' || $classIndex === null) {
+                return null;
+            }
+
+            return $this->resolveSourceMethod($classIndex, $method);
+
+        }
+
+        if ($tokens[ $receiver ]->equals(')') === false) {
+            return null;
+        }
+
+        $constructorParenthesis = $tokens->findBlockStart(
+            Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+            $receiver,
+        );
+
+        $classNameIndex = $tokens->getPrevMeaningfulToken($constructorParenthesis);
+
+        if ($classNameIndex === null || $this->isNameToken($tokens[ $classNameIndex ]) === false) {
+            return null;
+        }
+
+        $classIdentifier = $this->readQualifiedNameEndingAt($tokens, $classNameIndex);
+        $newIndex = $tokens->getPrevMeaningfulToken($classIdentifier[ 'start' ]);
+
+        if ($newIndex === null || $tokens[ $newIndex ]->isGivenKind(T_NEW) === false) {
+            return null;
+        }
+
+        $normalizedIdentifier = strtolower($classIdentifier[ 'name' ]);
+
+        if (($normalizedIdentifier === 'self' || $normalizedIdentifier === 'static') && $classIndex !== null) {
+            return $this->resolveSourceMethod($classIndex, $method);
+        }
+
+        if ($normalizedIdentifier === 'parent' && $classIndex !== null) {
+
+            $parent = $this->classes[ $classIndex ][ 'parent' ];
+
+            return $parent === null ? null : $this->resolveMethod($parent, $method);
+
+        }
+
+        $className = $this->resolveClassIdentifier($classIdentifier[ 'name' ], $position);
+
+        return $className === null ? null : $this->resolveMethod($className, $method);
     }
 
     /**
@@ -909,7 +960,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 return null;
             }
 
-            $constructor = (new ReflectionClass($className))->getConstructor();
+            $constructor = new ReflectionClass($className)->getConstructor();
 
             return $constructor === null ? null : $this->reflectionParameters($constructor->getParameters());
 
@@ -931,7 +982,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 return null;
             }
 
-            return $this->reflectionParameters((new ReflectionFunction($name))->getParameters());
+            return $this->reflectionParameters(new ReflectionFunction($name)->getParameters());
 
         } catch (Throwable) {
 
