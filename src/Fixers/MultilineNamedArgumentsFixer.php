@@ -50,6 +50,11 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      */
     private array $functions = [];
 
+    /**
+     * @var list<array{start: int, end: int, openParenthesis: int, closeParenthesis: int}>
+     */
+    private array $callableScopes = [];
+
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
@@ -80,6 +85,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         $this->namespaceContexts = $this->collectNamespaceContexts($tokens);
         $this->classes = $this->collectClassScopes($tokens);
         $this->functions = [];
+        $this->callableScopes = $this->collectCallableScopes($tokens);
 
         $this->collectImports($tokens);
         $this->resolveClassNames();
@@ -99,8 +105,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
             $openParenthesis = $openParentheses[ $index ];
             $closeParenthesis = $tokens->findBlockEnd(
-                Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
-                $openParenthesis,
+                type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                searchIndex: $openParenthesis,
             );
 
             if ($tokens->isPartialCodeMultiline($openParenthesis, $closeParenthesis) === false) {
@@ -446,8 +452,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             }
 
             $closeParenthesis = $tokens->findBlockEnd(
-                Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
-                $openParenthesis,
+                type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                searchIndex: $openParenthesis,
             );
 
             $parameters = $this->readDeclaredParameters(
@@ -476,6 +482,48 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             $this->functions[ $functionName ] = $parameters;
 
         }
+    }
+
+    /**
+     * @return list<array{start: int, end: int, openParenthesis: int, closeParenthesis: int}>
+     */
+    private function collectCallableScopes(Tokens $tokens): array
+    {
+        $scopes = [];
+
+        for ($index = 0; $index < $tokens->count(); $index++) {
+
+            if ($tokens[ $index ]->isGivenKind(T_FUNCTION) === false) {
+                continue;
+            }
+
+            $openParenthesis = $tokens->getNextTokenOfKind($index, [ '(' ]);
+
+            if ($openParenthesis === null) {
+                continue;
+            }
+
+            $closeParenthesis = $tokens->findBlockEnd(
+                type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                searchIndex: $openParenthesis,
+            );
+
+            $bodyStart = $tokens->getNextTokenOfKind($closeParenthesis, [ '{', ';' ]);
+
+            if ($bodyStart === null || $tokens[ $bodyStart ]->equals('{') === false) {
+                continue;
+            }
+
+            $scopes[] = [
+                'start' => $bodyStart,
+                'end' => $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $bodyStart),
+                'openParenthesis' => $openParenthesis,
+                'closeParenthesis' => $closeParenthesis,
+            ];
+
+        }
+
+        return $scopes;
     }
 
     private function findFunctionName(Tokens $tokens, int $functionIndex): ?int
@@ -662,8 +710,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $tokens->isPartialCodeMultiline(
-            $openParenthesis,
-            $arguments[ 0 ][ 'start' ] - 1,
+            start: $openParenthesis,
+            end: $arguments[ 0 ][ 'start' ] - 1,
         );
     }
 
@@ -820,14 +868,10 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      */
     private function resolveObjectMethod(Tokens $tokens, int $receiver, int $position, ?int $classIndex, string $method): ?array
     {
-        if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)) {
-
-            if ($tokens[ $receiver ]->getContent() !== '$this' || $classIndex === null) {
-                return null;
-            }
-
+        if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)
+            && $tokens[ $receiver ]->getContent() === '$this'
+            && $classIndex !== null) {
             return $this->resolveSourceMethod($classIndex, $method);
-
         }
 
         $className = $this->resolveReceiverClass($tokens, $receiver, $position, $classIndex);
@@ -839,11 +883,16 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     {
         if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)) {
 
-            if ($tokens[ $receiver ]->getContent() !== '$this' || $classIndex === null) {
-                return null;
+            if ($tokens[ $receiver ]->getContent() === '$this') {
+                return $classIndex === null ? null : $this->classes[ $classIndex ][ 'name' ];
             }
 
-            return $this->classes[ $classIndex ][ 'name' ];
+            return $this->resolveSourceParameterClass(
+                tokens: $tokens,
+                position: $position,
+                variable: $tokens[ $receiver ]->getContent(),
+                classIndex: $classIndex,
+            );
 
         }
 
@@ -856,8 +905,8 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         $callParenthesis = $tokens->findBlockStart(
-            Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
-            $receiver,
+            type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+            searchIndex: $receiver,
         );
 
         $nameIndex = $tokens->getPrevMeaningfulToken($callParenthesis);
@@ -906,6 +955,63 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         return $ownerClass === null
             ? null
             : $this->resolveMethodReturnClass($ownerClass, $callable[ 'name' ]);
+    }
+
+    private function resolveSourceParameterClass(Tokens $tokens, int $position, string $variable, ?int $classIndex): ?string
+    {
+        for ($scopeIndex = count($this->callableScopes) - 1; $scopeIndex >= 0; $scopeIndex--) {
+
+            $scope = $this->callableScopes[ $scopeIndex ];
+
+            if ($position < $scope[ 'start' ] || $position > $scope[ 'end' ]) {
+                continue;
+            }
+
+            foreach ($this->argumentRanges(
+                tokens: $tokens,
+                openParenthesis: $scope[ 'openParenthesis' ],
+                closeParenthesis: $scope[ 'closeParenthesis' ],
+            ) as $range) {
+
+                for ($index = $range[ 'start' ]; $index <= $range[ 'end' ]; $index++) {
+
+                    if ($tokens[ $index ]->isGivenKind(T_VARIABLE) === false
+                        || $tokens[ $index ]->getContent() !== $variable) {
+                        continue;
+                    }
+
+                    $typeIndex = $tokens->getPrevMeaningfulToken($index);
+
+                    if ($typeIndex !== null
+                        && in_array($tokens[ $typeIndex ]->getContent(), [ '&', '...' ], true)) {
+                        $typeIndex = $tokens->getPrevMeaningfulToken($typeIndex);
+                    }
+
+                    if ($typeIndex === null || $this->isNameToken($tokens[ $typeIndex ]) === false) {
+                        return null;
+                    }
+
+                    $beforeType = $tokens->getPrevMeaningfulToken($typeIndex);
+
+                    if ($beforeType !== null
+                        && $beforeType >= $range[ 'start' ]
+                        && in_array($tokens[ $beforeType ]->getContent(), [ '|', '&' ], true)) {
+                        return null;
+                    }
+
+                    return $this->resolveClassReference(
+                        identifier: $tokens[ $typeIndex ]->getContent(),
+                        position: $index,
+                        classIndex: $classIndex,
+                    );
+
+                }
+
+            }
+
+        }
+
+        return null;
     }
 
     private function resolvePropertyReceiverClass(Tokens $tokens, int $property, ?int $classIndex): ?string

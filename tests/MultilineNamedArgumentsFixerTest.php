@@ -48,6 +48,16 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_typed_parameter_receivers_use_resolved_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ParameterReceiverCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/ParameterReceiverCalls.php',
+        );
+    }
+
     public function test_namespace_alias_and_source_inheritance_are_resolved(): void
     {
         $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
