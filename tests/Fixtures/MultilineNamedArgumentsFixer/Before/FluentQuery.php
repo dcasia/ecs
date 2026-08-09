@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace DigitalCreative\ECS\Tests\Fixtures\MultilineNamedArgumentsFixer;
+
+use DigitalCreative\ECS\Tests\Support\ReflectionFluentModel;
+use DigitalCreative\ECS\Tests\Support\ReflectionFluentQuery;
+
+final class FluentQuery
+{
+    private function searchQuery(array $embedding): ReflectionFluentQuery
+    {
+        return ReflectionFluentModel::query()
+            ->join('memories', 'memories.id', '=', 'memory_embeddings.memory_id')
+            ->select([
+                'memories.id as memory_id',
+                'memories.owner_id',
+                'memories.content as memory_content',
+            ])
+            ->selectRaw('1 - (memory_embeddings.embedding <=> ?) AS score', [ $embedding ])
+            ->where('memories.status', 'indexed')
+            ->whereRaw(
+                '1 - (memory_embeddings.embedding <=> ?) >= ?',
+                [ $embedding, 0.75 ],
+            );
+    }
+}

@@ -28,6 +28,26 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_fluent_method_chains_use_resolved_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/FluentQuery.php',
+            expectedFixture: $fixtureDirectory . '/After/FluentQuery.php',
+        );
+    }
+
+    public function test_typed_property_receivers_use_resolved_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/TypedPropertyCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/TypedPropertyCalls.php',
+        );
+    }
+
     public function test_namespace_alias_and_source_inheritance_are_resolved(): void
     {
         $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
