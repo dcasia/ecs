@@ -8,6 +8,7 @@ use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
+use PhpCsFixer\Tokenizer\CT;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 use ReflectionClass;
@@ -1032,7 +1033,15 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         if ($beforeName === null
             || $tokens[ $beforeName ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]) === false) {
-            return $this->resolveFunctionReturnClass($callable[ 'name' ], $position);
+
+            return $this->resolveFunctionReturnClass($callable[ 'name' ], $position)
+                ?? $this->resolveClassStringFunctionClass(
+                    tokens: $tokens,
+                    openParenthesis: $callParenthesis,
+                    closeParenthesis: $receiver,
+                    classIndex: $classIndex,
+                );
+
         }
 
         $innerReceiver = $tokens->getPrevMeaningfulToken($beforeName);
@@ -1046,6 +1055,74 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         return $ownerClass === null
             ? null
             : $this->resolveMethodReturnClass($ownerClass, $callable[ 'name' ]);
+    }
+
+    private function resolveClassStringFunctionClass(Tokens $tokens, int $openParenthesis, int $closeParenthesis, ?int $classIndex): ?string
+    {
+        $resolvedClass = null;
+
+        foreach ($this->argumentRanges($tokens, $openParenthesis, $closeParenthesis) as $argument) {
+
+            $argumentClass = $this->resolveClassConstantArgument($tokens, $argument, $classIndex);
+
+            if ($argumentClass === null) {
+                continue;
+            }
+
+            if ($resolvedClass !== null) {
+                return null;
+            }
+
+            $resolvedClass = $argumentClass;
+
+        }
+
+        return $resolvedClass;
+    }
+
+    /**
+     * @param array{start: int, end: int} $argument
+     */
+    private function resolveClassConstantArgument(Tokens $tokens, array $argument, ?int $classIndex): ?string
+    {
+        $className = $tokens->getNextMeaningfulToken($argument[ 'start' ] - 1);
+
+        if ($className === null || $className > $argument[ 'end' ]) {
+            return null;
+        }
+
+        $separator = $tokens->getNextMeaningfulToken($className);
+
+        if ($separator !== null && $tokens[ $separator ]->getContent() === ':') {
+            $className = $tokens->getNextMeaningfulToken($separator);
+        }
+
+        if ($className === null
+            || $className > $argument[ 'end' ]
+            || $this->isNameToken($tokens[ $className ]) === false) {
+            return null;
+        }
+
+        $staticOperator = $tokens->getNextMeaningfulToken($className);
+        $classConstant = $staticOperator === null ? null : $tokens->getNextMeaningfulToken($staticOperator);
+
+        if ($staticOperator === null
+            || $classConstant === null
+            || $classConstant > $argument[ 'end' ]
+            || $tokens[ $staticOperator ]->isGivenKind(T_DOUBLE_COLON) === false
+            || $tokens[ $classConstant ]->isGivenKind(CT::T_CLASS_CONSTANT) === false) {
+            return null;
+        }
+
+        $afterClassConstant = $tokens->getNextMeaningfulToken($classConstant);
+
+        if ($afterClassConstant !== null && $afterClassConstant <= $argument[ 'end' ]) {
+            return null;
+        }
+
+        $classReference = $this->readQualifiedNameEndingAt($tokens, $className);
+
+        return $this->resolveClassReference($classReference[ 'name' ], $className, $classIndex);
     }
 
     /**
