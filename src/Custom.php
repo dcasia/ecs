@@ -13,6 +13,7 @@ use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\MultilineNamedArgumentsFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
+use DigitalCreative\ECS\Fixers\PaddedDocblockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
 use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
 use DigitalCreative\ECS\Fixers\TraitUseSpacingFixer;
@@ -23,6 +24,7 @@ return register_fixers(fixers: [
     AutoImportClassesFixer::class => true,
     PaddedArrayFixer::class => true,
     PaddedBlockFixer::class => true,
+    PaddedDocblockFixer::class => true,
     PaddedMultilineStatementFixer::class => true,
     StatementGroupingFixer::class => true,
     TraitUseSpacingFixer::class => true,
