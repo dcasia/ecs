@@ -27,19 +27,19 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
     final protected function assertFixtureIsFixedTo(string $inputFixture, string $expectedFixture): void
     {
         $this->assertCodeIsFixedTo(
-            $this->readFixture($inputFixture),
-            $this->readFixture($expectedFixture),
-            basename($inputFixture),
+            input: $this->readFixture($inputFixture),
+            expected: $this->readFixture($expectedFixture),
+            temporaryFilename: basename($inputFixture),
         );
     }
 
     final protected function assertLaravelFixtureIsFixedTo(string $inputFixture, string $expectedFixture): void
     {
         $this->assertCodeIsFixedTo(
-            $this->readFixture($inputFixture),
-            $this->readFixture($expectedFixture),
-            basename($inputFixture),
-            true,
+            input: $this->readFixture($inputFixture),
+            expected: $this->readFixture($expectedFixture),
+            temporaryFilename: basename($inputFixture),
+            laravelProject: true,
         );
     }
 
@@ -50,13 +50,11 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         $this->assertCodeIsFixedTo($source, $source, basename($fixture));
     }
 
-    final protected function assertCodeIsFixedTo(
-        string $input,
-        string $expected,
-        string $temporaryFilename = 'fixture.php',
-        bool $laravelProject = false,
-    ): void
+    final protected function assertCodeIsFixedTo(string $input, string $expected, string $temporaryFilename = 'fixture.php', bool $laravelProject = false): void
     {
+        $input = $this->normalizeLineEndings($input);
+        $expected = $this->normalizeLineEndings($expected);
+
         self::assertNotEmpty($this->fixerFileProcessor->getCheckers(), 'The ECS configuration registered no fixers.');
 
         $temporaryDirectory = sprintf(
@@ -80,7 +78,12 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         }
 
         try {
-            self::assertSame($expected, $this->fixerFileProcessor->processFileToString($temporaryFile));
+
+            self::assertSame(
+                expected: $expected,
+                actual: $this->normalizeLineEndings($this->fixerFileProcessor->processFileToString($temporaryFile)),
+            );
+
         } finally {
 
             unlink($temporaryFile);
@@ -118,5 +121,10 @@ abstract class EcsTestCase extends AbstractCheckerTestCase
         }
 
         return $contents;
+    }
+
+    private function normalizeLineEndings(string $code): string
+    {
+        return str_replace([ "\r\n", "\r" ], "\n", $code);
     }
 }
