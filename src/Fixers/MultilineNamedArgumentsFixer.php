@@ -51,9 +51,19 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     private array $functions = [];
 
     /**
+     * @var array<string, array{type: string|null, position: int}>
+     */
+    private array $functionReturnTypes = [];
+
+    /**
      * @var list<array{start: int, end: int, openParenthesis: int, closeParenthesis: int}>
      */
     private array $callableScopes = [];
+
+    /**
+     * @var list<array{start: int, end: int}>
+     */
+    private array $curlyScopes = [];
 
     public function getDefinition(): FixerDefinitionInterface
     {
@@ -85,7 +95,9 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         $this->namespaceContexts = $this->collectNamespaceContexts($tokens);
         $this->classes = $this->collectClassScopes($tokens);
         $this->functions = [];
+        $this->functionReturnTypes = [];
         $this->callableScopes = $this->collectCallableScopes($tokens);
+        $this->curlyScopes = $this->collectCurlyScopes($tokens);
 
         $this->collectImports($tokens);
         $this->resolveClassNames();
@@ -480,6 +492,10 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             $namespace = $contextIndex === null ? '' : $this->namespaceContexts[ $contextIndex ][ 'name' ];
             $functionName = strtolower($this->qualifyName($namespace, $tokens[ $nameIndex ]->getContent()));
             $this->functions[ $functionName ] = $parameters;
+            $this->functionReturnTypes[ $functionName ] = [
+                'type' => $returnType,
+                'position' => $index,
+            ];
 
         }
     }
@@ -519,6 +535,29 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 'end' => $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $bodyStart),
                 'openParenthesis' => $openParenthesis,
                 'closeParenthesis' => $closeParenthesis,
+            ];
+
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @return list<array{start: int, end: int}>
+     */
+    private function collectCurlyScopes(Tokens $tokens): array
+    {
+        $scopes = [];
+
+        for ($index = 0; $index < $tokens->count(); $index++) {
+
+            if ($tokens[ $index ]->equals('{') === false) {
+                continue;
+            }
+
+            $scopes[] = [
+                'start' => $index,
+                'end' => $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $index),
             ];
 
         }
@@ -787,15 +826,32 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     private function resolveCallParameters(Tokens $tokens, int $openParenthesis): ?array
     {
         $nameIndex = $tokens->getPrevMeaningfulToken($openParenthesis);
+        $classIndex = $this->findContainingClass($openParenthesis);
 
-        if ($nameIndex === null || $this->isNameToken($tokens[ $nameIndex ]) === false) {
+        if ($nameIndex === null) {
+            return null;
+        }
+
+        if ($tokens[ $nameIndex ]->isGivenKind(T_VARIABLE)) {
+
+            $className = $this->resolveReceiverClass(
+                tokens: $tokens,
+                receiver: $nameIndex,
+                position: $nameIndex,
+                classIndex: $classIndex,
+            );
+
+            return $className === null ? null : $this->resolveMethod($className, '__invoke');
+
+        }
+
+        if ($this->isNameToken($tokens[ $nameIndex ]) === false) {
             return null;
         }
 
         $callableName = $this->readQualifiedNameEndingAt($tokens, $nameIndex);
         $name = $callableName[ 'name' ];
         $beforeName = $tokens->getPrevMeaningfulToken($callableName[ 'start' ]);
-        $classIndex = $this->findContainingClass($openParenthesis);
 
         if ($beforeName !== null && $tokens[ $beforeName ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ])) {
 
@@ -887,9 +943,38 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
                 return $classIndex === null ? null : $this->classes[ $classIndex ][ 'name' ];
             }
 
+            $staticOperator = $tokens->getPrevMeaningfulToken($receiver);
+
+            if ($staticOperator !== null && $tokens[ $staticOperator ]->isGivenKind(T_DOUBLE_COLON)) {
+
+                $ownerIndex = $tokens->getPrevMeaningfulToken($staticOperator);
+
+                if ($ownerIndex === null || $this->isNameToken($tokens[ $ownerIndex ]) === false) {
+                    return null;
+                }
+
+                $owner = $this->readQualifiedNameEndingAt($tokens, $ownerIndex);
+                $ownerClass = $this->resolveClassReference($owner[ 'name' ], $receiver, $classIndex);
+
+                return $ownerClass === null
+                    ? null
+                    : $this->resolvePropertyClass($tokens, $ownerClass, ltrim($tokens[ $receiver ]->getContent(), '$'));
+
+            }
+
+            $assignment = $this->resolveLocalVariableClass(
+                tokens: $tokens,
+                variableIndex: $receiver,
+                classIndex: $classIndex,
+            );
+
+            if ($assignment[ 'found' ]) {
+                return $assignment[ 'class' ];
+            }
+
             return $this->resolveSourceParameterClass(
                 tokens: $tokens,
-                position: $position,
+                position: $receiver,
                 variable: $tokens[ $receiver ]->getContent(),
                 classIndex: $classIndex,
             );
@@ -912,7 +997,13 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         $nameIndex = $tokens->getPrevMeaningfulToken($callParenthesis);
 
         if ($nameIndex === null || $this->isNameToken($tokens[ $nameIndex ]) === false) {
-            return null;
+
+            $innerExpression = $tokens->getPrevMeaningfulToken($receiver);
+
+            return $innerExpression === null || $innerExpression <= $callParenthesis
+                ? null
+                : $this->resolveReceiverClass($tokens, $innerExpression, $position, $classIndex);
+
         }
 
         $callable = $this->readQualifiedNameEndingAt($tokens, $nameIndex);
@@ -941,7 +1032,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         if ($beforeName === null
             || $tokens[ $beforeName ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]) === false) {
-            return null;
+            return $this->resolveFunctionReturnClass($callable[ 'name' ], $position);
         }
 
         $innerReceiver = $tokens->getPrevMeaningfulToken($beforeName);
@@ -955,6 +1046,198 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         return $ownerClass === null
             ? null
             : $this->resolveMethodReturnClass($ownerClass, $callable[ 'name' ]);
+    }
+
+    /**
+     * @return array{found: bool, class: string|null}
+     */
+    private function resolveLocalVariableClass(Tokens $tokens, int $variableIndex, ?int $classIndex): array
+    {
+        $scopeIndex = $this->findContainingCallableScope($variableIndex);
+
+        if ($scopeIndex === null) {
+            return [ 'found' => false, 'class' => null ];
+        }
+
+        $scope = $this->callableScopes[ $scopeIndex ];
+        $useBlock = $this->findContainingCurlyBlock($variableIndex);
+        $variable = $tokens[ $variableIndex ]->getContent();
+
+        for ($index = $variableIndex - 1; $index > $scope[ 'start' ]; $index--) {
+
+            if ($tokens[ $index ]->isGivenKind(T_VARIABLE) === false
+                || $tokens[ $index ]->getContent() !== $variable
+                || $this->findContainingCallableScope($index) !== $scopeIndex) {
+                continue;
+            }
+
+            $operator = $tokens->getNextMeaningfulToken($index);
+
+            if ($operator === null || $tokens[ $operator ]->getContent() !== '=') {
+                continue;
+            }
+
+            if ($this->findContainingCurlyBlock($index) !== $useBlock
+                || $this->isConditionalAssignment($tokens, $index)) {
+                return [ 'found' => true, 'class' => null ];
+            }
+
+            $expressionEnd = $this->findAssignmentExpressionEnd(
+                tokens: $tokens,
+                assignmentOperator: $operator,
+                boundary: $variableIndex,
+            );
+
+            if ($expressionEnd === null) {
+                return [ 'found' => true, 'class' => null ];
+            }
+
+            return [
+                'found' => true,
+                'class' => $this->resolveReceiverClass(
+                    tokens: $tokens,
+                    receiver: $expressionEnd,
+                    position: $index,
+                    classIndex: $classIndex,
+                ),
+            ];
+
+        }
+
+        return [ 'found' => false, 'class' => null ];
+    }
+
+    private function findAssignmentExpressionEnd(Tokens $tokens, int $assignmentOperator, int $boundary): ?int
+    {
+        $end = null;
+
+        for ($index = $assignmentOperator + 1; $index < $boundary; $index++) {
+
+            if ($tokens[ $index ]->isWhitespace() || $tokens[ $index ]->isComment()) {
+                continue;
+            }
+
+            $block = Tokens::detectBlockType($tokens[ $index ]);
+
+            if ($block !== null && $block[ 'isStart' ]) {
+
+                $blockEnd = $tokens->findBlockEnd($block[ 'type' ], $index);
+
+                if ($blockEnd >= $boundary) {
+                    return null;
+                }
+
+                $end = $end === null && $tokens[ $index ]->getContent() === '('
+                    ? $tokens->getPrevMeaningfulToken($blockEnd)
+                    : $blockEnd;
+
+                $index = $blockEnd;
+
+                continue;
+
+            }
+
+            if ($tokens[ $index ]->equalsAny([ ';', ',', ')', ']', '}' ])) {
+                break;
+            }
+
+            if ($tokens[ $index ]->equalsAny([
+                '?',
+                ':',
+                '+',
+                '-',
+                '*',
+                '/',
+                '%',
+                '.',
+                '<',
+                '>',
+                '<=',
+                '>=',
+                '==',
+                '===',
+                '!=',
+                '!==',
+                '<=>',
+                '??',
+                '&&',
+                '||',
+            ])) {
+                return null;
+            }
+
+            $end = $index;
+
+        }
+
+        return $end;
+    }
+
+    private function isConditionalAssignment(Tokens $tokens, int $variableIndex): bool
+    {
+        for ($index = $variableIndex - 1; $index >= 0; $index--) {
+
+            if ($tokens[ $index ]->equalsAny([ ';', '{', '}' ])) {
+                return false;
+            }
+
+            if ($tokens[ $index ]->isGivenKind([
+                T_DO,
+                T_ELSE,
+                T_ELSEIF,
+                T_FOR,
+                T_FOREACH,
+                T_IF,
+                T_WHILE,
+            ])) {
+                return true;
+            }
+
+        }
+
+        return false;
+    }
+
+    private function findContainingCallableScope(int $position): ?int
+    {
+        $match = null;
+        $matchStart = -1;
+
+        foreach ($this->callableScopes as $index => $scope) {
+
+            if ($position > $scope[ 'start' ]
+                && $position < $scope[ 'end' ]
+                && $scope[ 'start' ] > $matchStart) {
+
+                $match = $index;
+                $matchStart = $scope[ 'start' ];
+
+            }
+
+        }
+
+        return $match;
+    }
+
+    private function findContainingCurlyBlock(int $position): ?int
+    {
+        $match = null;
+        $matchStart = -1;
+
+        foreach ($this->curlyScopes as $scope) {
+
+            if ($position > $scope[ 'start' ]
+                && $position < $scope[ 'end' ]
+                && $scope[ 'start' ] > $matchStart) {
+
+                $match = $scope[ 'start' ];
+                $matchStart = $scope[ 'start' ];
+
+            }
+
+        }
+
+        return $match;
     }
 
     private function resolveSourceParameterClass(Tokens $tokens, int $position, string $variable, ?int $classIndex): ?string
@@ -1016,26 +1299,25 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
     private function resolvePropertyReceiverClass(Tokens $tokens, int $property, ?int $classIndex): ?string
     {
-        if ($classIndex === null) {
-            return null;
-        }
-
         $operator = $tokens->getPrevMeaningfulToken($property);
         $owner = $operator === null ? null : $tokens->getPrevMeaningfulToken($operator);
 
         if ($operator === null
             || $tokens[ $operator ]->isGivenKind([ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR ]) === false
-            || $owner === null
-            || $tokens[ $owner ]->isGivenKind(T_VARIABLE) === false
-            || $tokens[ $owner ]->getContent() !== '$this') {
+            || $owner === null) {
             return null;
         }
 
-        return $this->resolveSourcePropertyClass(
+        $ownerClass = $this->resolveReceiverClass(
             tokens: $tokens,
+            receiver: $owner,
+            position: $property,
             classIndex: $classIndex,
-            property: $tokens[ $property ]->getContent(),
         );
+
+        return $ownerClass === null
+            ? null
+            : $this->resolvePropertyClass($tokens, $ownerClass, $tokens[ $property ]->getContent());
     }
 
     private function resolveSourcePropertyClass(Tokens $tokens, int $classIndex, string $property): ?string
@@ -1092,6 +1374,65 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         return null;
     }
 
+    private function resolvePropertyClass(Tokens $tokens, string $className, string $property): ?string
+    {
+        $sourceClass = $this->findSourceClass($className);
+
+        if ($sourceClass !== null) {
+
+            $propertyClass = $this->resolveSourcePropertyClass($tokens, $sourceClass, $property);
+
+            if ($propertyClass !== null) {
+                return $propertyClass;
+            }
+
+            $parent = $this->classes[ $sourceClass ][ 'parent' ];
+
+            return $parent === null ? null : $this->resolvePropertyClass($tokens, $parent, $property);
+
+        }
+
+        try {
+
+            if (class_exists($className) === false
+                && interface_exists($className) === false
+                && trait_exists($className) === false) {
+                return null;
+            }
+
+            $class = new ReflectionClass($className);
+
+            if ($class->hasProperty($property) === false) {
+                return null;
+            }
+
+            $reflectionProperty = $class->getProperty($property);
+            $type = $reflectionProperty->getType();
+
+            if ($type instanceof ReflectionNamedType) {
+                return $this->resolveReflectedNamedType($type, $reflectionProperty->getDeclaringClass());
+            }
+
+            if ($type !== null) {
+                return null;
+            }
+
+            $docComment = $reflectionProperty->getDocComment();
+
+            if ($docComment === false
+                || preg_match('/@var\s+([^\s]+)/', $docComment, $matches) !== 1) {
+                return null;
+            }
+
+            return $this->resolveReflectedTypeName($matches[ 1 ], $reflectionProperty->getDeclaringClass());
+
+        } catch (Throwable) {
+
+            return null;
+
+        }
+    }
+
     private function resolveClassReference(string $identifier, int $position, ?int $classIndex): ?string
     {
         $normalizedIdentifier = strtolower($identifier);
@@ -1111,6 +1452,30 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      * @return list<array{name: string, variadic: bool}>|null
      */
     private function resolveFunction(string $name, int $position): ?array
+    {
+        foreach ($this->functionCandidates($name, $position) as $candidate) {
+
+            $localParameters = $this->functions[ strtolower($candidate) ] ?? null;
+
+            if ($localParameters !== null) {
+                return $localParameters;
+            }
+
+            $parameters = $this->reflectFunction($candidate);
+
+            if ($parameters !== null) {
+                return $parameters;
+            }
+
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function functionCandidates(string $name, int $position): array
     {
         $contextIndex = $this->findNamespaceContext($position);
         $namespace = $contextIndex === null ? '' : $this->namespaceContexts[ $contextIndex ][ 'name' ];
@@ -1147,18 +1512,31 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         }
 
-        foreach (array_unique($candidates) as $candidate) {
+        return array_values(array_unique($candidates));
+    }
 
-            $localParameters = $this->functions[ strtolower($candidate) ] ?? null;
+    private function resolveFunctionReturnClass(string $name, int $position): ?string
+    {
+        foreach ($this->functionCandidates($name, $position) as $candidate) {
 
-            if ($localParameters !== null) {
-                return $localParameters;
+            $localReturnType = $this->functionReturnTypes[ strtolower($candidate) ] ?? null;
+
+            if ($localReturnType !== null) {
+
+                return $localReturnType[ 'type' ] === null
+                    ? null
+                    : $this->resolveClassReference(
+                        identifier: $localReturnType[ 'type' ],
+                        position: $localReturnType[ 'position' ],
+                        classIndex: null,
+                    );
+
             }
 
-            $parameters = $this->reflectFunction($candidate);
+            $returnClass = $this->reflectFunctionReturnClass($candidate);
 
-            if ($parameters !== null) {
-                return $parameters;
+            if ($returnClass !== null) {
+                return $returnClass;
             }
 
         }
@@ -1338,13 +1716,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         $declaringClass = $method->getDeclaringClass();
 
         if ($returnType instanceof ReflectionNamedType) {
-
-            if ($returnType->isBuiltin()) {
-                return null;
-            }
-
-            return $this->resolveReflectedTypeName($returnType->getName(), $declaringClass);
-
+            return $this->resolveReflectedNamedType($returnType, $declaringClass);
         }
 
         if ($returnType !== null) {
@@ -1359,6 +1731,29 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $this->resolveReflectedTypeName($matches[ 1 ], $declaringClass);
+    }
+
+    private function resolveReflectedNamedType(ReflectionNamedType $type, ReflectionClass $declaringClass): ?string
+    {
+        if ($type->isBuiltin()) {
+            return null;
+        }
+
+        $name = $type->getName();
+
+        if (in_array(strtolower($name), [ 'self', 'static' ], true)) {
+            return $declaringClass->getName();
+        }
+
+        if (strtolower($name) === 'parent') {
+
+            $parent = $declaringClass->getParentClass();
+
+            return $parent === false ? null : $parent->getName();
+
+        }
+
+        return $name;
     }
 
     private function resolveReflectedTypeName(string $type, ReflectionClass $declaringClass): ?string
@@ -1453,6 +1848,50 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             }
 
             return $this->reflectionParameters(new ReflectionFunction($name)->getParameters());
+
+        } catch (Throwable) {
+
+            return null;
+
+        }
+    }
+
+    private function reflectFunctionReturnClass(string $name): ?string
+    {
+        try {
+
+            if (function_exists($name) === false) {
+                return null;
+            }
+
+            $function = new ReflectionFunction($name);
+            $returnType = $function->getReturnType();
+
+            if ($returnType instanceof ReflectionNamedType) {
+                return $returnType->isBuiltin() ? null : $returnType->getName();
+            }
+
+            if ($returnType !== null) {
+                return null;
+            }
+
+            $docComment = $function->getDocComment();
+
+            if ($docComment === false
+                || preg_match('/@return\s+([^\s]+)/', $docComment, $matches) !== 1) {
+                return null;
+            }
+
+            $type = ltrim(trim($matches[ 1 ]), '?');
+            $type = preg_replace('/<.*>$/', '', $type) ?? $type;
+
+            if (str_contains($type, '|') || str_contains($type, '&')) {
+                return null;
+            }
+
+            return str_starts_with($type, '\\')
+                ? ltrim($type, '\\')
+                : $this->qualifyName($function->getNamespaceName(), $type);
 
         } catch (Throwable) {
 
