@@ -88,6 +88,23 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_class_string_function_receivers_use_resolved_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ClassStringFunctionCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/ClassStringFunctionCalls.php',
+        );
+    }
+
+    public function test_class_string_function_output_is_idempotent(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/After/ClassStringFunctionCalls.php',
+        );
+    }
+
     public function test_already_named_multiline_calls_are_idempotent(): void
     {
         $this->assertFixturePasses(
@@ -120,6 +137,13 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
     {
         $this->assertFixturePasses(
             fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/AmbiguousLocalReceivers.php',
+        );
+    }
+
+    public function test_ambiguous_and_dynamic_class_string_functions_are_left_unchanged(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/AmbiguousClassStringFunctionCalls.php',
         );
     }
 }
