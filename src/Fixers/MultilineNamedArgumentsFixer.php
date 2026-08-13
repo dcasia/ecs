@@ -37,6 +37,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      *     start: int,
      *     end: int,
      *     shortName: string|null,
+     *     trait: bool,
      *     name: string|null,
      *     rawParent: string|null,
      *     parent: string|null,
@@ -65,6 +66,11 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      * @var list<array{start: int, end: int}>
      */
     private array $curlyScopes = [];
+
+    /**
+     * @var array<int, list<string>>
+     */
+    private array $pestThisTypes = [];
 
     public function getDefinition(): FixerDefinitionInterface
     {
@@ -102,6 +108,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         $this->collectImports($tokens);
         $this->resolveClassNames();
+        $this->pestThisTypes = $this->collectPestThisTypes($tokens);
         $this->collectCallableDeclarations($tokens);
 
         $openParentheses = [];
@@ -242,6 +249,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
      *     start: int,
      *     end: int,
      *     shortName: string|null,
+     *     trait: bool,
      *     name: string|null,
      *     rawParent: string|null,
      *     parent: string|null,
@@ -297,6 +305,7 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             $classes[] = [
                 'start' => $openBrace,
                 'end' => $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $openBrace),
+                'trait' => $tokens[ $index ]->isGivenKind(T_TRAIT),
                 'shortName' => $shortName,
                 'name' => null,
                 'rawParent' => $rawParent,
@@ -442,6 +451,75 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             }
 
         }
+    }
+
+    /**
+     * @return array<int, list<string>>
+     */
+    private function collectPestThisTypes(Tokens $tokens): array
+    {
+        $types = [];
+
+        for ($index = 0; $index < $tokens->count(); $index++) {
+
+            if ($this->isNameToken($tokens[ $index ]) === false
+                || strcasecmp(basename(str_replace('\\', '/', $tokens[ $index ]->getContent())), 'uses') !== 0
+                || $this->findContainingClass($index) !== null
+                || $this->findContainingCallableScope($index) !== null) {
+                continue;
+            }
+
+            $previous = $tokens->getPrevMeaningfulToken($index);
+
+            if ($previous !== null
+                && $tokens[ $previous ]->isGivenKind([
+                    T_OBJECT_OPERATOR,
+                    T_NULLSAFE_OBJECT_OPERATOR,
+                    T_DOUBLE_COLON,
+                    T_FUNCTION,
+                    T_FN,
+                    T_NEW,
+                ])) {
+                continue;
+            }
+
+            $openParenthesis = $tokens->getNextMeaningfulToken($index);
+
+            if ($openParenthesis === null || $tokens[ $openParenthesis ]->equals('(') === false) {
+                continue;
+            }
+
+            $contextIndex = $this->findNamespaceContext($index);
+
+            if ($contextIndex === null) {
+                continue;
+            }
+
+            $closeParenthesis = $tokens->findBlockEnd(
+                type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                searchIndex: $openParenthesis,
+            );
+
+            foreach ($this->argumentRanges($tokens, $openParenthesis, $closeParenthesis) as $argument) {
+
+                $className = $this->resolveClassConstantArgument(
+                    tokens: $tokens,
+                    argument: $argument,
+                    classIndex: null,
+                );
+
+                if ($className === null
+                    || in_array($className, $types[ $contextIndex ] ?? [], true)) {
+                    continue;
+                }
+
+                $types[ $contextIndex ][] = $className;
+
+            }
+
+        }
+
+        return $types;
     }
 
     private function collectCallableDeclarations(Tokens $tokens): void
@@ -926,14 +1004,95 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     private function resolveObjectMethod(Tokens $tokens, int $receiver, int $position, ?int $classIndex, string $method): ?array
     {
         if ($tokens[ $receiver ]->isGivenKind(T_VARIABLE)
-            && $tokens[ $receiver ]->getContent() === '$this'
-            && $classIndex !== null) {
-            return $this->resolveSourceMethod($classIndex, $method);
+            && $tokens[ $receiver ]->getContent() === '$this') {
+
+            return $classIndex === null
+                ? $this->resolvePestThisMethod($position, $method)
+                : $this->resolveSourceMethod($classIndex, $method);
+
         }
 
         $className = $this->resolveReceiverClass($tokens, $receiver, $position, $classIndex);
 
         return $className === null ? null : $this->resolveMethod($className, $method);
+    }
+
+    /**
+     * @return list<array{name: string, variadic: bool}>|null
+     */
+    private function resolvePestThisMethod(int $position, string $method): ?array
+    {
+        $contextIndex = $this->findNamespaceContext($position);
+
+        if ($contextIndex === null) {
+            return null;
+        }
+
+        $classParameters = null;
+        $traitParameters = null;
+        $classCount = 0;
+
+        foreach ($this->pestThisTypes[ $contextIndex ] ?? [] as $type) {
+
+            $isTrait = $this->isTraitReference($type);
+
+            if ($isTrait === null) {
+                return null;
+            }
+
+            $parameters = $this->resolveMethod($type, $method);
+
+            if ($isTrait) {
+
+                if ($parameters === null) {
+                    continue;
+                }
+
+                if ($traitParameters !== null) {
+                    return null;
+                }
+
+                $traitParameters = $parameters;
+
+                continue;
+
+            }
+
+            $classCount++;
+
+            if ($classCount > 1) {
+                return null;
+            }
+
+            $classParameters = $parameters;
+
+        }
+
+        return $traitParameters ?? $classParameters;
+    }
+
+    private function isTraitReference(string $type): ?bool
+    {
+        $sourceClass = $this->findSourceClass($type);
+
+        if ($sourceClass !== null) {
+            return $this->classes[ $sourceClass ][ 'trait' ];
+        }
+
+        try {
+
+            if (trait_exists($type)) {
+                return true;
+            }
+
+            if (class_exists($type)) {
+                return false;
+            }
+
+        } catch (Throwable) {
+        }
+
+        return null;
     }
 
     private function resolveReceiverClass(Tokens $tokens, int $receiver, int $position, ?int $classIndex): ?string

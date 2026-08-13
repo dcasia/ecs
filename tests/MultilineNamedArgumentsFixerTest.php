@@ -98,6 +98,23 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_pest_bound_this_uses_configured_test_case_and_trait_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/PestBoundThisCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/PestBoundThisCalls.php',
+        );
+    }
+
+    public function test_pest_bound_this_output_is_idempotent(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/After/PestBoundThisCalls.php',
+        );
+    }
+
     public function test_class_string_function_output_is_idempotent(): void
     {
         $this->assertFixturePasses(
