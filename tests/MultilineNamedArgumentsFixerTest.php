@@ -115,6 +115,40 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_magic_methods_functions_traits_top_level_calls_and_complex_arguments_are_resolved(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ReceiverContextMatrix.php',
+            expectedFixture: $fixtureDirectory . '/After/ReceiverContextMatrix.php',
+        );
+    }
+
+    public function test_captured_receivers_are_resolved_through_nested_test_and_arrow_function_scopes(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/CapturedClosureCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/CapturedClosureCalls.php',
+        );
+    }
+
+    public function test_comprehensive_receiver_context_output_is_idempotent(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/After/ReceiverContextMatrix.php',
+        );
+    }
+
+    public function test_captured_receiver_output_is_idempotent(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/After/CapturedClosureCalls.php',
+        );
+    }
+
     public function test_class_string_function_output_is_idempotent(): void
     {
         $this->assertFixturePasses(
@@ -154,6 +188,13 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
     {
         $this->assertFixturePasses(
             fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/AmbiguousLocalReceivers.php',
+        );
+    }
+
+    public function test_ambiguous_top_level_magic_and_captured_receivers_are_left_unchanged(): void
+    {
+        $this->assertFixturePasses(
+            fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/AmbiguousScopeAndMagicCalls.php',
         );
     }
 

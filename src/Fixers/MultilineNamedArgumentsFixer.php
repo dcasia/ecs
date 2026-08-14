@@ -1290,16 +1290,19 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     private function resolveLocalVariableClass(Tokens $tokens, int $variableIndex, ?int $classIndex): array
     {
         $scopeIndex = $this->findContainingCallableScope($variableIndex);
+        $contextIndex = $this->findNamespaceContext($variableIndex);
+        $scopeStart = $contextIndex === null
+            ? -1
+            : $this->namespaceContexts[ $contextIndex ][ 'start' ] - 1;
 
-        if ($scopeIndex === null) {
-            return [ 'found' => false, 'class' => null ];
+        if ($scopeIndex !== null) {
+            $scopeStart = $this->callableScopes[ $scopeIndex ][ 'start' ];
         }
 
-        $scope = $this->callableScopes[ $scopeIndex ];
         $useBlock = $this->findContainingCurlyBlock($variableIndex);
         $variable = $tokens[ $variableIndex ]->getContent();
 
-        for ($index = $variableIndex - 1; $index > $scope[ 'start' ]; $index--) {
+        for ($index = $variableIndex - 1; $index > $scopeStart; $index--) {
 
             if ($tokens[ $index ]->isGivenKind(T_VARIABLE) === false
                 || $tokens[ $index ]->getContent() !== $variable
@@ -1340,7 +1343,48 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         }
 
-        return [ 'found' => false, 'class' => null ];
+        if ($scopeIndex === null) {
+            return [ 'found' => false, 'class' => null ];
+        }
+
+        $capture = $this->findClosureCapture($tokens, $scopeIndex, $variable);
+
+        return $capture === null
+            ? [ 'found' => false, 'class' => null ]
+            : $this->resolveLocalVariableClass($tokens, $capture, $classIndex);
+    }
+
+    private function findClosureCapture(Tokens $tokens, int $scopeIndex, string $variable): ?int
+    {
+        $scope = $this->callableScopes[ $scopeIndex ];
+        $useIndex = $tokens->getNextMeaningfulToken($scope[ 'closeParenthesis' ]);
+
+        if ($useIndex === null
+            || $tokens[ $useIndex ]->isGivenKind([ T_USE, CT::T_USE_LAMBDA ]) === false) {
+            return null;
+        }
+
+        $openParenthesis = $tokens->getNextMeaningfulToken($useIndex);
+
+        if ($openParenthesis === null || $tokens[ $openParenthesis ]->equals('(') === false) {
+            return null;
+        }
+
+        $closeParenthesis = $tokens->findBlockEnd(
+            type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+            searchIndex: $openParenthesis,
+        );
+
+        for ($index = $openParenthesis + 1; $index < $closeParenthesis; $index++) {
+
+            if ($tokens[ $index ]->isGivenKind(T_VARIABLE)
+                && $tokens[ $index ]->getContent() === $variable) {
+                return $index;
+            }
+
+        }
+
+        return null;
     }
 
     private function findAssignmentExpressionEnd(Tokens $tokens, int $assignmentOperator, int $boundary): ?int
@@ -1840,7 +1884,18 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         $reflectionMethod = $this->reflectMethod($className, $method);
 
-        return $reflectionMethod === null ? null : $this->resolveReflectedMethodReturnClass($reflectionMethod);
+        if ($reflectionMethod !== null) {
+            return $this->resolveReflectedMethodReturnClass($reflectionMethod);
+        }
+
+        $magicMethod = $this->reflectMagicMethod($className, $method);
+
+        return $magicMethod === null || $magicMethod[ 'returnType' ] === null
+            ? null
+            : $this->resolveReflectedTypeName(
+                type: $magicMethod[ 'returnType' ],
+                declaringClass: $magicMethod[ 'declaringClass' ],
+            );
     }
 
     /**
@@ -1856,9 +1911,11 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
         $reflectionMethod = $this->reflectMethod($className, $method);
 
-        return $reflectionMethod === null
-            ? null
-            : $this->reflectionParameters($reflectionMethod->getParameters());
+        if ($reflectionMethod !== null) {
+            return $this->reflectionParameters($reflectionMethod->getParameters());
+        }
+
+        return $this->reflectMagicMethod($className, $method)[ 'parameters' ] ?? null;
     }
 
     private function reflectMethod(string $className, string $method): ?ReflectionMethod
@@ -1876,6 +1933,268 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             return null;
 
         }
+    }
+
+    /**
+     * @return array{
+     *     returnType: string|null,
+     *     parameters: list<array{name: string, variadic: bool}>,
+     *     declaringClass: ReflectionClass
+     * }|null
+     */
+    private function reflectMagicMethod(string $className, string $method): ?array
+    {
+        try {
+
+            if (class_exists($className) === false
+                && interface_exists($className) === false
+                && trait_exists($className) === false) {
+                return null;
+            }
+
+            return $this->findReflectionMagicMethod(new ReflectionClass($className), $method);
+
+        } catch (Throwable) {
+
+            return null;
+
+        }
+    }
+
+    /**
+     * @return array{
+     *     returnType: string|null,
+     *     parameters: list<array{name: string, variadic: bool}>,
+     *     declaringClass: ReflectionClass
+     * }|null
+     */
+    private function findReflectionMagicMethod(ReflectionClass $class, string $method, array $visited = []): ?array
+    {
+        $className = strtolower($class->getName());
+
+        if (isset($visited[ $className ])) {
+            return null;
+        }
+
+        $visited[ $className ] = true;
+        $magicMethod = $this->parseReflectionMagicMethod($class, $method);
+
+        if ($magicMethod !== null) {
+            return $magicMethod;
+        }
+
+        foreach ($class->getTraits() as $trait) {
+
+            $magicMethod = $this->findReflectionMagicMethod($trait, $method, $visited);
+
+            if ($magicMethod !== null) {
+                return $magicMethod;
+            }
+
+        }
+
+        foreach ($this->reflectionMixinClassNames($class) as $mixinClassName) {
+
+            if (class_exists($mixinClassName) === false && interface_exists($mixinClassName) === false) {
+                continue;
+            }
+
+            $magicMethod = $this->findReflectionMagicMethod(
+                class: new ReflectionClass($mixinClassName),
+                method: $method,
+                visited: $visited,
+            );
+
+            if ($magicMethod !== null) {
+                return $magicMethod;
+            }
+
+        }
+
+        $parent = $class->getParentClass();
+
+        if ($parent !== false) {
+
+            $magicMethod = $this->findReflectionMagicMethod($parent, $method, $visited);
+
+            if ($magicMethod !== null) {
+                return $magicMethod;
+            }
+
+        }
+
+        foreach ($class->getInterfaces() as $interface) {
+
+            $magicMethod = $this->findReflectionMagicMethod($interface, $method, $visited);
+
+            if ($magicMethod !== null) {
+                return $magicMethod;
+            }
+
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{
+     *     returnType: string|null,
+     *     parameters: list<array{name: string, variadic: bool}>,
+     *     declaringClass: ReflectionClass
+     * }|null
+     */
+    private function parseReflectionMagicMethod(ReflectionClass $class, string $method): ?array
+    {
+        $docComment = $class->getDocComment();
+
+        if ($docComment === false) {
+            return null;
+        }
+
+        $lines = preg_split('/\R/', $docComment);
+
+        if ($lines === false) {
+            return null;
+        }
+
+        foreach ($lines as $line) {
+
+            if (preg_match(
+                pattern: '/@method\s+(?:static\s+)?(?:(?<returnType>[^\s(]+)\s+)?(?<method>[A-Za-z_][A-Za-z0-9_]*)\s*\((?<parameters>.*)\)/',
+                subject: $line,
+                matches: $matches,
+            ) !== 1 || strcasecmp($matches[ 'method' ], $method) !== 0) {
+                continue;
+            }
+
+            $parameters = $this->parseMagicMethodParameters($matches[ 'parameters' ]);
+
+            if ($parameters === null) {
+                return null;
+            }
+
+            return [
+                'returnType' => $matches[ 'returnType' ] === '' ? null : $matches[ 'returnType' ],
+                'parameters' => $parameters,
+                'declaringClass' => $class,
+            ];
+
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<array{name: string, variadic: bool}>|null
+     */
+    private function parseMagicMethodParameters(string $parameters): ?array
+    {
+        if (trim($parameters) === '') {
+            return [];
+        }
+
+        $resolvedParameters = [];
+
+        foreach ($this->splitTopLevelParameters($parameters) as $parameter) {
+
+            if (preg_match_all(
+                pattern: '/&?\s*(?<variadic>\.\.\.)?\s*\$(?<name>[A-Za-z_][A-Za-z0-9_]*)/',
+                subject: $parameter,
+                matches: $matches,
+                flags: PREG_SET_ORDER,
+            ) < 1) {
+                return null;
+            }
+
+            $match = $matches[ array_key_last($matches) ];
+            $resolvedParameters[] = [
+                'name' => $match[ 'name' ],
+                'variadic' => $match[ 'variadic' ] !== '',
+            ];
+
+        }
+
+        return $resolvedParameters;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function splitTopLevelParameters(string $parameters): array
+    {
+        $parts = [];
+        $start = 0;
+        $depth = 0;
+        $quote = null;
+        $escaped = false;
+        $length = strlen($parameters);
+
+        for ($index = 0; $index < $length; $index++) {
+
+            $character = $parameters[ $index ];
+
+            if ($quote !== null) {
+
+                if ($escaped) {
+
+                    $escaped = false;
+
+                    continue;
+
+                }
+
+                if ($character === '\\') {
+
+                    $escaped = true;
+
+                    continue;
+
+                }
+
+                if ($character === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+
+            }
+
+            if ($character === "'" || $character === '"') {
+
+                $quote = $character;
+
+                continue;
+
+            }
+
+            if (str_contains('([{<', $character)) {
+
+                $depth++;
+
+                continue;
+
+            }
+
+            if (str_contains(')]}>', $character)) {
+
+                $depth = max(0, $depth - 1);
+
+                continue;
+
+            }
+
+            if ($character !== ',' || $depth !== 0) {
+                continue;
+            }
+
+            $parts[] = trim(substr($parameters, $start, $index - $start));
+            $start = $index + 1;
+
+        }
+
+        $parts[] = trim(substr($parameters, $start));
+
+        return $parts;
     }
 
     private function findReflectionMethod(ReflectionClass $class, string $method, array $visited = []): ?ReflectionMethod
