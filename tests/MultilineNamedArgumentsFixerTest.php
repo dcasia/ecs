@@ -204,4 +204,24 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
             fixture: __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/Valid/AmbiguousClassStringFunctionCalls.php',
         );
     }
+
+    public function test_class_string_in_static_and_regular_arrow_functions_resolves_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ClassStringFunctionCallsInArrowFunctions.php',
+            expectedFixture: $fixtureDirectory . '/After/ClassStringFunctionCallsInArrowFunctions.php',
+        );
+    }
+
+    public function test_class_string_function_with_complex_return_type_resolves_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ComplexReturnTypeClassStringCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/ComplexReturnTypeClassStringCalls.php',
+        );
+    }
 }
