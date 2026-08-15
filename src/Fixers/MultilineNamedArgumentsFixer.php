@@ -2358,6 +2358,10 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
             return null;
         }
 
+        if (preg_match('/[^a-zA-Z0-9_\\\\]/', $type)) {
+            return null;
+        }
+
         return str_starts_with($type, '\\')
             ? ltrim($type, '\\')
             : $this->qualifyName($declaringClass->getNamespaceName(), $type);
