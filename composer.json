@@ -20,7 +20,10 @@
     "autoload-dev": {
         "psr-4": {
             "DigitalCreative\\ECS\\Tests\\": "tests/"
-        }
+        },
+        "files": [
+            "tests/Support/complex_return_app.php"
+        ]
     },
     "scripts": {
         "test": "phpunit --do-not-cache-result tests"
