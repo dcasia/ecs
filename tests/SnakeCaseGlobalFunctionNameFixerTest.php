@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace DigitalCreative\ECS\Tests;
+
+use DigitalCreative\ECS\Tests\Support\EcsTestCase;
+
+final class SnakeCaseGlobalFunctionNameFixerTest extends EcsTestCase
+{
+    public function test_global_function_declarations_and_direct_references_use_snake_case(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/SnakeCaseGlobalFunctionNameFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/GlobalFunctions.php',
+            expectedFixture: $fixtureDirectory . '/After/GlobalFunctions.php',
+        );
+    }
+
+    public function test_snake_case_global_functions_are_idempotent(): void
+    {
+        $this->assertFixturePasses(
+            __DIR__ . '/Fixtures/SnakeCaseGlobalFunctionNameFixer/After/GlobalFunctions.php',
+        );
+    }
+}
