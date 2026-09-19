@@ -63,6 +63,11 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
     private array $callableScopes = [];
 
     /**
+     * @var list<array{start: int, end: int, openParenthesis: int, closeParenthesis: int}>
+     */
+    private array $parameterScopes = [];
+
+    /**
      * @var list<array{start: int, end: int}>
      */
     private array $curlyScopes = [];
@@ -104,6 +109,16 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         $this->functions = [];
         $this->functionReturnTypes = [];
         $this->callableScopes = $this->collectCallableScopes($tokens);
+        $this->parameterScopes = [
+            ...$this->callableScopes,
+            ...$this->collectArrowFunctionScopes($tokens),
+        ];
+
+        usort(
+            array: $this->parameterScopes,
+            callback: static fn (array $left, array $right): int => $left[ 'start' ] <=> $right[ 'start' ],
+        );
+
         $this->curlyScopes = $this->collectCurlyScopes($tokens);
 
         $this->collectImports($tokens);
@@ -619,6 +634,90 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
         }
 
         return $scopes;
+    }
+
+    /**
+     * @return list<array{start: int, end: int, openParenthesis: int, closeParenthesis: int}>
+     */
+    private function collectArrowFunctionScopes(Tokens $tokens): array
+    {
+        $scopes = [];
+
+        for ($index = 0; $index < $tokens->count(); $index++) {
+
+            if ($tokens[ $index ]->isGivenKind(T_FN) === false) {
+                continue;
+            }
+
+            $openParenthesis = $tokens->getNextTokenOfKind($index, [ '(' ]);
+
+            if ($openParenthesis === null) {
+                continue;
+            }
+
+            $closeParenthesis = $tokens->findBlockEnd(
+                type: Tokens::BLOCK_TYPE_PARENTHESIS_BRACE,
+                searchIndex: $openParenthesis,
+            );
+
+            $arrow = $tokens->getNextTokenOfKind($closeParenthesis, [ [ T_DOUBLE_ARROW ] ]);
+
+            if ($arrow === null) {
+                continue;
+            }
+
+            $end = $this->findArrowFunctionEnd($tokens, $arrow);
+
+            if ($end === null) {
+                continue;
+            }
+
+            $scopes[] = [
+                'start' => $arrow,
+                'end' => $end,
+                'openParenthesis' => $openParenthesis,
+                'closeParenthesis' => $closeParenthesis,
+            ];
+
+        }
+
+        return $scopes;
+    }
+
+    private function findArrowFunctionEnd(Tokens $tokens, int $arrow): ?int
+    {
+        $end = null;
+
+        for ($index = $arrow + 1; $index < $tokens->count(); $index++) {
+
+            if ($tokens[ $index ]->isWhitespace() || $tokens[ $index ]->isComment()) {
+                continue;
+            }
+
+            $block = Tokens::detectBlockType($tokens[ $index ]);
+
+            if ($block !== null) {
+
+                if ($block[ 'isStart' ] === false) {
+                    break;
+                }
+
+                $end = $tokens->findBlockEnd($block[ 'type' ], $index);
+                $index = $end;
+
+                continue;
+
+            }
+
+            if ($tokens[ $index ]->equalsAny([ ',', ';' ])) {
+                break;
+            }
+
+            $end = $index;
+
+        }
+
+        return $end;
     }
 
     /**
@@ -1522,9 +1621,9 @@ final class MultilineNamedArgumentsFixer extends AbstractFixer
 
     private function resolveSourceParameterClass(Tokens $tokens, int $position, string $variable, ?int $classIndex): ?string
     {
-        for ($scopeIndex = count($this->callableScopes) - 1; $scopeIndex >= 0; $scopeIndex--) {
+        for ($scopeIndex = count($this->parameterScopes) - 1; $scopeIndex >= 0; $scopeIndex--) {
 
-            $scope = $this->callableScopes[ $scopeIndex ];
+            $scope = $this->parameterScopes[ $scopeIndex ];
 
             if ($position < $scope[ 'start' ] || $position > $scope[ 'end' ]) {
                 continue;
