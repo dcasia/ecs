@@ -11,6 +11,7 @@ use DigitalCreative\ECS\Fixers\DescriptiveVariableNameFixer;
 use DigitalCreative\ECS\Fixers\FunctionParameterLayoutFixer;
 use DigitalCreative\ECS\Fixers\LaravelEmptyToBlankFixer;
 use DigitalCreative\ECS\Fixers\MultilineNamedArgumentsFixer;
+use DigitalCreative\ECS\Fixers\NoPointlessMixedPhpdocFixer;
 use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedDocblockFixer;
@@ -33,6 +34,7 @@ return register_fixers(fixers: [
     DescriptiveVariableNameFixer::class => true,
     FunctionParameterLayoutFixer::class => true,
     MultilineNamedArgumentsFixer::class => true,
+    NoPointlessMixedPhpdocFixer::class => true,
     ForbidSwitchStatementSniff::class => true,
     RequireParameterTypeSniff::class => true,
     LaravelEmptyToBlankFixer::class => true,

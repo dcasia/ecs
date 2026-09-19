@@ -13,9 +13,6 @@ function project_factory(string $implementation)
 
 abstract class ClassStringFunctionCalls
 {
-    /**
-     * @param array<string, mixed> $data
-     */
     protected function handleRecordUpdate(object $record, array $data): object
     {
         /**
