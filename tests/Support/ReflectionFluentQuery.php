@@ -21,7 +21,17 @@ final class ReflectionFluentQuery
         return $this;
     }
 
-    public function where(string $column, mixed $value): self
+    public function where(mixed $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): self
+    {
+        return $this;
+    }
+
+    public function whereKeyNot(mixed $id): self
+    {
+        return $this;
+    }
+
+    public function when(mixed $value, ?callable $callback = null, ?callable $default = null): self
     {
         return $this;
     }

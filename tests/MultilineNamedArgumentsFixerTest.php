@@ -135,6 +135,34 @@ final class MultilineNamedArgumentsFixerTest extends EcsTestCase
         );
     }
 
+    public function test_typed_arrow_parameters_resolve_nested_method_arguments(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/NestedArrowRuleCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/NestedArrowRuleCalls.php',
+        );
+    }
+
+    public function test_fluent_when_callbacks_use_resolved_parameter_names(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer';
+
+        $this->assertFixtureIsFixedTo(
+            inputFixture: $fixtureDirectory . '/Before/ConditionalQueryCalls.php',
+            expectedFixture: $fixtureDirectory . '/After/ConditionalQueryCalls.php',
+        );
+    }
+
+    public function test_nested_callback_outputs_are_idempotent(): void
+    {
+        $fixtureDirectory = __DIR__ . '/Fixtures/MultilineNamedArgumentsFixer/After';
+
+        $this->assertFixturePasses($fixtureDirectory . '/NestedArrowRuleCalls.php');
+        $this->assertFixturePasses($fixtureDirectory . '/ConditionalQueryCalls.php');
+    }
+
     public function test_comprehensive_receiver_context_output_is_idempotent(): void
     {
         $this->assertFixturePasses(
