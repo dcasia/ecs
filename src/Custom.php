@@ -16,6 +16,7 @@ use DigitalCreative\ECS\Fixers\PaddedArrayFixer;
 use DigitalCreative\ECS\Fixers\PaddedBlockFixer;
 use DigitalCreative\ECS\Fixers\PaddedDocblockFixer;
 use DigitalCreative\ECS\Fixers\PaddedMultilineStatementFixer;
+use DigitalCreative\ECS\Fixers\SnakeCaseGlobalFunctionNameFixer;
 use DigitalCreative\ECS\Fixers\StatementGroupingFixer;
 use DigitalCreative\ECS\Fixers\TraitUseSpacingFixer;
 use DigitalCreative\ECS\Sniffs\ForbidSwitchStatementSniff;
@@ -35,6 +36,7 @@ return register_fixers(fixers: [
     FunctionParameterLayoutFixer::class => true,
     MultilineNamedArgumentsFixer::class => true,
     NoPointlessMixedPhpdocFixer::class => true,
+    SnakeCaseGlobalFunctionNameFixer::class => true,
     ForbidSwitchStatementSniff::class => true,
     RequireParameterTypeSniff::class => true,
     LaravelEmptyToBlankFixer::class => true,

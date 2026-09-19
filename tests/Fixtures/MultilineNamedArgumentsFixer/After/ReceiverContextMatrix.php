@@ -8,12 +8,12 @@ use DigitalCreative\ECS\Tests\Support\ReflectionDatabaseConnection;
 use DigitalCreative\ECS\Tests\Support\ReflectionMagicConnectionFacade;
 use stdClass;
 
-function reflectedConnection(): ReflectionDatabaseConnection
+function reflected_connection(): ReflectionDatabaseConnection
 {
     return ReflectionMagicConnectionFacade::connection('events');
 }
 
-function queryFromFunction(ReflectionDatabaseConnection $connection, object $context): void
+function query_from_function(ReflectionDatabaseConnection $connection, object $context): void
 {
     $connection->write(
         query: 'function query',
@@ -45,7 +45,7 @@ final class QueryService
 }
 
 $context = new stdClass();
-$connection = reflectedConnection();
+$connection = reflected_connection();
 $magicConnection = ReflectionMagicConnectionFacade::connection('events');
 
 $magicConnection->selectOne(
@@ -75,4 +75,4 @@ ReflectionMagicConnectionFacade::write(
     context: $context,
 );
 
-queryFromFunction($connection, $context);
+query_from_function($connection, $context);
