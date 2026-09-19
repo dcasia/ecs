@@ -17,8 +17,8 @@ final class ClassOpeningBracketFixer extends AbstractFixer implements Whitespace
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'There must be no blank lines between {} within interfaces / traits / classes',
-            [],
+            summary: 'Class, interface, and trait opening braces must start on the next line without extra blank lines inside the body.',
+            codeSamples: [],
         );
     }
 
@@ -53,8 +53,6 @@ final class ClassOpeningBracketFixer extends AbstractFixer implements Whitespace
                 if (str_contains($token->getContent(), PHP_EOL) === false) {
                     $tokens[ $openBracketsIndex - 1 ] = new Token([ T_WHITESPACE, PHP_EOL ]);
                 }
-
-                break;
 
             }
 
